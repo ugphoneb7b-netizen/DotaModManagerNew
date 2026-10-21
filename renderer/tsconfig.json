@@ -1,0 +1,42 @@
+// Type checking for the window's TypeScript (npm run typecheck, through tools/typecheck.mjs).
+//
+// Strict from the first file: the code checked here is written in TypeScript from the start, so
+// it carries no debt worth a baseline, and tools/typecheck.mjs fails on any error in it.
+//
+// allowJs without checkJs: two plain scripts stay JavaScript on purpose. i18n.js and uninstall.js
+// are loaded by the uninstall window as they are, without Vite, and app.ts imports i18n.js first
+// so L and tr are on window before anything else runs. Everything else here is TypeScript.
+//
+// The tests import these files straight into Node, which strips the types and runs the rest.
+// That is why imports name the .ts file, type-only imports say so (verbatimModuleSyntax), and
+// nothing here needs compiling to run (erasableSyntaxOnly: no enums, no namespaces).
+//
+// This is also the lint for these files, as src/tsconfig.json is for the main process: ESLint
+// reads only the JavaScript. The rules strict leaves out are switched on below, the same five.
+{
+  "compilerOptions": {
+    "target": "ES2023",
+    "lib": ["ES2023", "DOM", "DOM.Iterable"],
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "resolveJsonModule": true,
+    "jsx": "react-jsx",
+    "strict": true,
+    "noUnusedLocals": true,
+    "allowUnreachableCode": false,
+    "noFallthroughCasesInSwitch": true,
+    "noImplicitReturns": true,
+    "noImplicitOverride": true,
+    "noEmit": true,
+    "allowJs": true,
+    "checkJs": false,
+    "isolatedModules": true,
+    "allowImportingTsExtensions": true,
+    "verbatimModuleSyntax": true,
+    "erasableSyntaxOnly": true,
+    "skipLibCheck": true,
+    "types": []
+  },
+  "include": ["**/*.ts", "**/*.tsx"],
+  "exclude": ["public", "uninstall-bridge.d.ts"]
+}

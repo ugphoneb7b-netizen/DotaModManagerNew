@@ -1,0 +1,61 @@
+name: CodeQL
+
+# Static analysis of everything in the repository, by GitHub, on a schedule and on every push
+# to main.
+#
+# This exists to be checked rather than to be passed. The app writes into a game folder,
+# unpacks archives somebody else built, and patches two of Dota's own files; "read the source"
+# is the answer offered to anybody who asks whether that is safe, and an analyser anybody can
+# see the results of is a second answer that costs the reader nothing. The findings are public
+# under Security -> Code scanning.
+#
+# JavaScript and TypeScript in one language pass: the app is plain JS, the site is Astro and
+# TypeScript, and CodeQL reads both from the same setup.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  # The merge queue asks for an analysis of the change on top of the newest main as well.
+  merge_group:
+  schedule:
+    # Mondays. A weekly pass catches a rule that was added after the code was written, which
+    # is most of what scheduled scanning is actually for.
+    - cron: '17 4 * * 1'
+
+# The token reads the repository and nothing more. The job that uploads results asks for that
+# itself, so a job added to this file later does not inherit the right to write findings.
+permissions:
+  contents: read
+
+# A pull request's newer push replaces its older analysis. A commit on main never does: each one is
+# analysed to the end. Until 2026-09-26 main shared one group with cancel-in-progress, so a merge
+# landing a minute after another cancelled its analysis, the commit list showed a red cross that
+# meant nothing, and OpenSSF Scorecard's SAST check counted that commit as never analysed.
+concurrency:
+  group: codeql-${{ github.event_name == 'pull_request' && github.ref || github.sha }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  analyze:
+    name: Analyse JavaScript and TypeScript
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: read
+      # the results go to the Security tab
+      security-events: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - uses: github/codeql-action/init@24c54180a607b1449ed407dd24f251e4e9147c8d # v4
+        with:
+          languages: javascript-typescript
+          # security-and-quality over the default set: the default reports what can be
+          # exploited, this also reports what is dead, unreachable or contradictory, which is
+          # the half that keeps a codebase honest.
+          queries: security-and-quality
+
+      - uses: github/codeql-action/analyze@24c54180a607b1449ed407dd24f251e4e9147c8d # v4
+        with:
+          category: /language:javascript-typescript

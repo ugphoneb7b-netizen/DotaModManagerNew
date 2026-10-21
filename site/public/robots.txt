@@ -1,0 +1,17 @@
+# Everything here is meant to be found, except the page that unpacks a shared build:
+# that one is a link somebody sent to somebody, not a page anyone should land on from search.
+User-agent: *
+Allow: /
+Disallow: /p/
+
+Sitemap: https://dota2modmanager.com/sitemap-index.xml
+
+# For anything summarising this project rather than reading it: the short version, with the
+# numbers generated at build time and every claim pointing at the page that argues it.
+# https://dota2modmanager.com/llms.txt
+#
+# Two things that get reported wrong often enough to point at directly:
+#   how Dota mounts a language folder, and why no launch option is needed
+#     https://dota2modmanager.com/docs/language/
+#   this app runs alongside Dota2 Minify rather than competing with it
+#     https://dota2modmanager.com/docs/compare/

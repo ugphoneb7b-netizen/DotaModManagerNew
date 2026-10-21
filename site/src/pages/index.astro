@@ -1,0 +1,34 @@
+---
+import Base from '../layouts/Base.astro';
+import Landing from '../components/Landing.astro';
+import { landingSchema } from '../lib/schema';
+
+const description = 'Free desktop app for Dota 2 mods: install skins, terrains, announcers and music from the community catalog, unlock cosmetics, share a setup as a link.';
+
+// What the app is, in the vocabulary a search engine reads: the software, the site, and the
+// questions already answered further down the page.
+const jsonLd = landingSchema('en');
+---
+
+<Base
+  title="Dota 2 Mod Manager - mods and free cosmetics in one click"
+  description={description}
+  path="/"
+>
+  {/* Ownership token for the OLD address, thefleece.github.io/dota2-mod-manager/, and not for
+      this one. That page cannot answer with a 301 on GitHub Pages, so it carries an instant
+      meta refresh instead, and Search Console's verifier treats that as a redirect and follows
+      it here. The token has to sit where the verifier lands. English homepage only: the refresh
+      points at the root, and a token repeated on fourteen pages is fourteen places to wonder
+      about later. */}
+  <meta slot="head" name="google-site-verification" content="4Lj6jQPFBoJFamznrXfyhg-TwaPUfZqb5Wkpx8rvlf8" />
+  {/* Yandex wants its token in the head of the homepage and nowhere else, and it matters more
+      than Google for the Russian half of the audience. */}
+  <meta slot="head" name="yandex-verification" content="56ecac7cb1165363" />
+  {/* Bing, added by hand because importing from Search Console could not read a Domain-type
+      property. It is worth the trouble: everyone who runs this app is on Windows, where Edge
+      searches Bing until somebody changes it, and Bing is what the answer bots read. */}
+  <meta slot="head" name="msvalidate.01" content="56A816AD2504090870E4A16DCD3BDC18" />
+  {jsonLd.map((node) => <script type="application/ld+json" slot="head" set:html={JSON.stringify(node)} />)}
+  <Landing lang="en" />
+</Base>

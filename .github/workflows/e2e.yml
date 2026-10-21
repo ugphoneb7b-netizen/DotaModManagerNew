@@ -1,0 +1,85 @@
+# Install a mod, switch it off and on, and remove it, by clicking in the window.
+#
+# 2.6.5 and 2.6.6 went out with Install dead while every check here was green, because nothing
+# ever pressed the button (issue #19). tools/e2e.mjs presses it, in the sandbox game tree, with a
+# fixture catalog and a fixture archive written into the app's own caches. It needs no network,
+# and it does not go red because the live catalog changed overnight.
+#
+# Both systems the app ships for, because the code that breaks is rarely the same on the two:
+# processes, file locks and Steam's layout all take a different branch on Windows.
+name: Window
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  # The merge queue installs a mod through the window again on top of the newest main.
+  merge_group:
+  workflow_dispatch:
+
+# The token reads the repository and nothing more.
+permissions:
+  contents: read
+
+jobs:
+  linux:
+    name: Install a mod through the window
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
+        with:
+          node-version: 24
+          cache: npm
+
+      - run: npm ci
+
+      # Electron needs an X server that a runner does not have.
+      - name: Install xvfb
+        # A mirror that stops answering held this step for two hours on 2026-10-01. apt drops a
+        # silent connection after 30 s and tries another, and the step gives up at ten minutes.
+        timeout-minutes: 10
+        # The Ubuntu image ships xvfb (actions/runner-images, Ubuntu 24.04), so apt runs only when it is
+        # missing. On 2026-10-07 two runs spent their ten minutes waiting on azure.archive.ubuntu.com
+        # for a package that was already installed.
+        run: |
+          if command -v Xvfb >/dev/null && command -v xvfb-run >/dev/null; then
+            echo "xvfb is already on the runner"
+          else
+            sudo apt-get -o Acquire::Retries=3 -o Acquire::http::Timeout=30 update && sudo apt-get -o Acquire::Retries=3 install -y xvfb
+          fi
+      - name: Click through installing a mod, removing it, and the removal window
+        run: xvfb-run -a node tools/e2e.mjs
+
+      - name: What the window showed
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
+        with:
+          name: e2e-linux
+          path: e2e-output/
+          if-no-files-found: warn
+
+  windows:
+    name: Install a mod through the window on Windows
+    runs-on: windows-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
+        with:
+          node-version: 24
+          cache: npm
+
+      - run: npm ci
+
+      - name: Click through installing a mod, removing it, and the removal window
+        run: node tools/e2e.mjs
+
+      - name: What the window showed
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
+        with:
+          name: e2e-windows
+          path: e2e-output/
+          if-no-files-found: warn

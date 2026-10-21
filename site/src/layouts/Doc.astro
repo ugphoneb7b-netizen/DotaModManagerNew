@@ -1,0 +1,253 @@
+---
+/**
+ * One documentation page.
+ *
+ * The blocks come from src/i18n/docs.ts as data rather than markup, so the same structure
+ * serves both languages and a page cannot end up with a heading in English and a paragraph
+ * in Russian. Links inside that copy are written as "~/docs/vpk/" and get their language
+ * prefix here, which is the one thing a translator would otherwise get wrong every time.
+ *
+ * The structured data says TechArticle plus a breadcrumb on every page, a FAQPage where the
+ * page has questions, and HowTo where it has numbered steps. Google has stopped showing rich
+ * results for most of that, but the markup is what other engines and answer bots read, and
+ * describing the page correctly costs nothing.
+ */
+import Base from './Base.astro';
+import { pathIn, type Lang } from '../i18n/ui';
+import { docs, docsIndex, docSlugs, type Doc, type DocSlug } from '../i18n/docs';
+import { plainText } from '../lib/text';
+import { authorNode, appVersion } from '../lib/schema';
+import { siteStats } from '../lib/stats';
+import { landing } from '../i18n/landing';
+
+interface Props {
+  lang: Lang;
+  slug: DocSlug;
+}
+
+const { lang, slug } = Astro.props;
+const doc: Doc = docs[lang][slug];
+const index = docsIndex[lang];
+
+/** Last time somebody checked these pages against the game. Shown, and given to crawlers. */
+const UPDATED = '2026-09-04';
+
+const site = Astro.site ?? new URL('https://dota2modmanager.com');
+const abs = (p: string) => new URL(pathIn(lang, p), site).href;
+
+/**
+ * "~/docs/vpk/" -> "/docs/vpk/" in English, "/ru/docs/vpk/" in Russian, and any count written
+ * as {mods} filled from the catalog.
+ *
+ * Guides quote numbers too, and a number typed into a guide is a number that will be wrong in
+ * a month. Russian also wants the noun to agree with a figure nobody knows before the build,
+ * so the agreeing forms come along with the digits.
+ */
+const stats = await siteStats();
+const locale = lang === 'ru' ? 'ru-RU' : 'en-US';
+const nf = new Intl.NumberFormat(locale);
+const pr = new Intl.PluralRules(locale);
+const agree = (n: number, forms: readonly [string, string, string]) => {
+  const form = pr.select(n);
+  return form === 'one' ? forms[0] : form === 'few' ? forms[1] : forms[2];
+};
+const catWords: Record<Lang, [string, string, string]> = {
+  en: ['category', 'categories', 'categories'],
+  ru: ['категории', 'категориях', 'категориях'],
+};
+const counts: Record<string, string> = {
+  '{version}': appVersion(),
+  '{mods}': nf.format(stats.mods),
+  '{modsWord}': agree(stats.mods, landing[lang].statWords[0]),
+  '{categories}': nf.format(stats.categories),
+  '{categoriesWord}': agree(stats.categories, catWords[lang]),
+};
+
+const link = (html: string) => {
+  let out = html.replaceAll('~/', lang === 'en' ? '/' : `/${lang}/`);
+  for (const [key, value] of Object.entries(counts)) out = out.replaceAll(key, value);
+  return out;
+};
+
+/** The catalog by category, biggest first, using the names the landing already translates. */
+const categories = landing[lang].marquee
+  .map(([id, label]) => [label, stats.byCategory[id] ?? 0] as const)
+  .filter(([, n]) => n > 0)
+  .sort((a, b) => b[1] - a[1]);
+
+const steps = doc.blocks.filter((b) => b.k === 'steps');
+const faqs = doc.blocks.filter((b) => b.k === 'faq');
+
+const author = authorNode(site.origin);
+
+const jsonLd: Record<string, unknown>[] = [
+  { '@context': 'https://schema.org', ...author },
+  {
+    '@context': 'https://schema.org',
+    '@type': 'TechArticle',
+    headline: doc.h1,
+    description: doc.description,
+    inLanguage: lang,
+    datePublished: UPDATED,
+    dateModified: UPDATED,
+    mainEntityOfPage: abs(`/docs/${doc.slug}/`),
+    // One entity behind the site, the app and every guide, said once and pointed at from
+    // here: a guide written by a name-shaped string is a guide by nobody in particular.
+    author: { '@id': author['@id'] },
+    publisher: { '@id': author['@id'] },
+    isPartOf: { '@id': `${site.origin}/#website` },
+    about: { '@type': 'VideoGame', name: 'Dota 2', publisher: { '@type': 'Organization', name: 'Valve Corporation' } },
+  },
+  {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: [
+      { '@type': 'ListItem', position: 1, name: 'Dota 2 Mod Manager', item: abs('/') },
+      { '@type': 'ListItem', position: 2, name: index.h1, item: abs('/docs/') },
+      { '@type': 'ListItem', position: 3, name: doc.h1, item: abs(`/docs/${doc.slug}/`) },
+    ],
+  },
+];
+
+if (faqs.length) {
+  jsonLd.push({
+    '@context': 'https://schema.org',
+    '@type': 'FAQPage',
+    mainEntity: faqs.flatMap((b) =>
+      b.items.map(([q, a]) => ({
+        '@type': 'Question',
+        name: plainText(q),
+        acceptedAnswer: { '@type': 'Answer', text: plainText(a) },
+      })),
+    ),
+  });
+}
+
+if (steps.length) {
+  jsonLd.push({
+    '@context': 'https://schema.org',
+    '@type': 'HowTo',
+    name: doc.h1,
+    description: doc.description,
+    inLanguage: lang,
+    step: steps[0].items.map(([name, text], i) => ({
+      '@type': 'HowToStep',
+      position: i + 1,
+      name: plainText(name),
+      text: plainText(text),
+    })),
+  });
+}
+
+/**
+ * Three more, taken from where this one sits in the list and wrapping round.
+ *
+ * It used to be every other page, which was fine at five and a wall at twelve. Three is a row,
+ * and walking forward from here means a reader who follows them lands somewhere new each time
+ * instead of on the same first three from every page.
+ */
+const at = docSlugs.indexOf(slug);
+const others = [1, 2, 3].map((n) => docs[lang][docSlugs[(at + n) % docSlugs.length]]);
+
+const backLabel = lang === 'ru' ? 'Все гайды' : 'All guides';
+const updatedLabel = lang === 'ru' ? 'Проверено' : 'Checked';
+const nextLabel = lang === 'ru' ? 'Дальше' : 'Read next';
+const updatedHuman = new Intl.DateTimeFormat(lang === 'ru' ? 'ru-RU' : 'en-GB', {
+  day: 'numeric',
+  month: 'long',
+  year: 'numeric',
+}).format(new Date(UPDATED));
+---
+
+{/* No brand suffix here. A guide competes on the question somebody typed, and " - Dota 2 Mod
+    Manager" costs twenty characters that push the answer past where search results cut the
+    line. The landing and the guides index carry the name; these carry the question. */}
+<Base title={doc.title} description={doc.description} path={`/docs/${doc.slug}/`}>
+  {jsonLd.map((node) => <script type="application/ld+json" slot="head" set:html={JSON.stringify(node)} />)}
+
+  <article class="doc wrap">
+    <nav class="crumbs" aria-label={index.h1}>
+      <a href={pathIn(lang, '/docs/')}>{backLabel}</a>
+    </nav>
+
+    <h1>{doc.h1}</h1>
+    <p class="lead">{doc.lead}</p>
+    <p class="muted doc-date">
+      {updatedLabel} <time datetime={UPDATED}>{updatedHuman}</time>
+    </p>
+
+    {
+      doc.blocks.map((b) => {
+        if (b.k === 'h2') return <h2 id={b.id}>{b.t}</h2>;
+        if (b.k === 'p') return <p set:html={link(b.t)} />;
+        if (b.k === 'note') return <p class="doc-note" set:html={link(b.t)} />;
+        if (b.k === 'code') return <pre class="doc-code" tabindex="0"><code>{b.t}</code></pre>;
+        if (b.k === 'categories')
+          return (
+            <ul class="facts">
+              {categories.map(([label, n]) => (
+                <li>
+                  <b>{label}</b>
+                  <span>{nf.format(n)}</span>
+                </li>
+              ))}
+            </ul>
+          );
+        if (b.k === 'list')
+          return (
+            <ul class="doc-list">
+              {b.items.map((it) => (
+                <li set:html={link(it)} />
+              ))}
+            </ul>
+          );
+        if (b.k === 'steps')
+          return (
+            <ol class="doc-steps">
+              {b.items.map(([title, text]) => (
+                <li>
+                  <b>{title}</b>
+                  <span set:html={link(text)} />
+                </li>
+              ))}
+            </ol>
+          );
+        if (b.k === 'cards')
+          return (
+            <div class="cards doc-cards">
+              {b.items.map(([title, text]) => (
+                <div class="card">
+                  <h3>{title}</h3>
+                  <p set:html={link(text)} />
+                </div>
+              ))}
+            </div>
+          );
+        return (
+          <dl class="doc-faq">
+            {b.items.map(([q, a]) => (
+              <>
+                <dt>{q}</dt>
+                <dd set:html={link(a)} />
+              </>
+            ))}
+          </dl>
+        );
+      })
+    }
+
+    <aside class="doc-next">
+      <h2>{nextLabel}</h2>
+      <div class="cards">
+        {
+          others.map((o) => (
+            <a class="card doc-card-link" href={pathIn(lang, `/docs/${o.slug}/`)}>
+              <h3>{o.h1}</h3>
+              <p>{o.card}</p>
+            </a>
+          ))
+        }
+      </div>
+    </aside>
+  </article>
+</Base>

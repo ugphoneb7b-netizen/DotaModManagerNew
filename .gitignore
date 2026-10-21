@@ -1,0 +1,45 @@
+node_modules/
+dist/
+
+# Astro's generated types and content cache: rebuilt on every build.
+.astro/
+
+# Throwaway Dota tree and downloaded mods built by tools/sandbox.js. The list of what a
+# sandbox should hold travels with the repo in tools/sandbox-mods.json; the files do not.
+sandbox/
+
+# The weekly search report is a build product: it is posted as an issue comment, not kept.
+seo-report.md
+
+# Bookkeeping the scheduled jobs keep for themselves, and nothing else reads.
+#
+# These were committed back to main after every run, which is how a source repository ends up
+# 57 MB: fingerprints.state.json alone is 434 KB and had been rewritten 66 times, 23.6 MB of
+# history for a file whose only reader is the job that wrote it. They live in the Actions cache
+# now. Every one of the three tools already treats a missing state file as "first run", so a
+# cache that expires costs one slower run and nothing else.
+fingerprints.state.json
+# Written next to them by the same job and published to the catalog-data branch only.
+mod-paths.json
+indexnow.state.json
+seo-state.json
+
+# Signing keys. The public halves are pinned in src/; the private halves live outside this
+# tree and a stray one committed here would look like protection while being the opposite.
+*.pem
+catalog-key.pem
+# written by tools/check-credentials.mjs in radar.yml
+credentials-status.json
+# screenshots, window results and the app log of tools/e2e.mjs
+e2e-output/
+# inputs tools/fuzz-parsers.mjs kept because a parser mishandled them; the seed reproduces them
+fuzz-output/
+
+# The window page Vite builds (npm run build:ui); main.js loads it from here.
+out/
+
+.localappdata/
+.npm-cache/
+.electron-builder-cache/
+.devin/
+

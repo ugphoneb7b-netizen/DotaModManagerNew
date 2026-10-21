@@ -1,0 +1,12 @@
+{
+  "_why": "Lines each of the largest files is allowed. tools/size-budget.mjs fails a run where one grows, and where a file that is not listed crosses 300 lines. --update writes measurements back but never raises a number: raising one means editing this file by hand and saying why. Splitting these files shows up here as a number going down.",
+  "measured": "2026-10-20",
+  "watchAt": 300,
+  "files": {
+    "renderer/grids/GridsScreen.tsx": 1159,
+    "renderer/i18n.js": 909,
+    "renderer/locales/zh-CN-app.js": 316,
+    "src/grid-config.ts": 403,
+    "src/ipc-grids.ts": 360
+  }
+}

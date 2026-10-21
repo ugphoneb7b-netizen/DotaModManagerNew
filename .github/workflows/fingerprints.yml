@@ -1,0 +1,117 @@
+name: Fingerprints
+
+# Keeps fingerprints.json in sync with the catalog: new/changed mods are fetched and
+# fingerprinted, unchanged ones are skipped (state is checkpointed in the job's cache), and the
+# result is committed to the catalog-data branch only when it actually changes. Nothing here
+# builds a release (that workflow triggers on v* tags only).
+#
+# It also publishes mod-paths.json, every file each pak mod replaces, which the Dota update watcher
+# (dota-watch.yml) holds against what a new build changed. Same downloads again.
+#
+# It also rebuilds the site's hero pages, because they are made of the same downloads. The job
+# already opens every archive to fingerprint it and works out which heroes each one is about;
+# the site then needs the catalog's preview for those same mods. Doing it anywhere else means
+# fetching the catalog twice and having two answers to when it last changed.
+#
+# Node 24 rather than 20: tools/catalog.mjs imports the site's TypeScript directly, which older
+# Node cannot read.
+
+on:
+  schedule:
+    - cron: '*/30 * * * *'   # every 30 min; a no-op unless the catalog changed
+  workflow_dispatch:
+
+# Read only. The commit goes to the catalog-data branch over SSH with the deploy key below, which
+# carries its own write access to this one repository, and the checkpoint cache has a token of its
+# own. Nothing in the job writes with the workflow token, so it no longer gets to (OpenSSF
+# Scorecard, 2026-09-15), and nothing in it writes to main at all since 2026-10-07.
+permissions:
+  contents: read
+
+concurrency:
+  group: fingerprints
+  cancel-in-progress: false
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      # The code, read only: the tools and the site the job runs. Nothing goes back to main.
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+
+      # What this job writes lives on the catalog-data branch (DECISIONS.md, "The catalog job
+      # commits to a branch of its own"), at the paths it has here. Checked out beside the code
+      # and pushed back over SSH with a deploy key that can write to this repository and nothing
+      # else. It used to be the owner's personal access token, which could write to every
+      # repository on the account and expired on 2026-09-15, taking the job with it.
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          ref: catalog-data
+          path: data
+          ssh-key: ${{ secrets.FINGERPRINTS_DEPLOY_KEY }}
+
+      - name: Start from the catalog data branch
+        run: |
+          cp data/fingerprints.json data/hero-index.json .
+          cp data/site/src/data/heroes.json data/site/src/data/categories.json site/src/data/
+          rsync -a --delete data/site/public/mods/ site/public/mods/
+
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Install deps (skip the electron binary — not needed here)
+        run: npm ci
+        env:
+          ELECTRON_SKIP_BINARY_DOWNLOAD: 1
+
+      # The per-mod checkpoint that makes this job incremental. It belongs to the job and to
+      # nothing else, so it is cached rather than committed - see .gitignore. The key moves
+      # every run and the restore-key takes the newest match, which is how a cache is used as
+      # a rolling state file.
+      - name: Restore the fingerprint checkpoint
+        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6
+        with:
+          path: fingerprints.state.json
+          key: fingerprint-state-${{ github.run_id }}
+          restore-keys: fingerprint-state-
+
+      - name: Regenerate fingerprints (incremental)
+        run: node tools/gen-fingerprints.js --conc 8
+
+      - name: Save the fingerprint checkpoint
+        uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6
+        if: always()
+        with:
+          path: fingerprints.state.json
+          key: fingerprint-state-${{ github.run_id }}
+
+      # sharp, for reading each preview's size and for refusing the two catalog entries that
+      # are mp4 files wearing a .webp name
+      - name: Install the site's deps
+        run: npm ci --prefix site
+
+      - name: Rebuild the hero and category pages
+        run: npm run catalog --prefix site
+
+      - name: Commit to catalog-data if changed
+        working-directory: data
+        run: |
+          cp ../fingerprints.json ../hero-index.json ../mod-paths.json .
+          cp ../site/src/data/heroes.json ../site/src/data/categories.json site/src/data/
+          rsync -a --delete ../site/public/mods/ site/public/mods/
+          if [ -z "$(git status --porcelain)" ]; then
+            echo "catalog unchanged"
+          else
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git add -A
+            git show HEAD:fingerprints.json > /tmp/fp-data-before.json 2>/dev/null || true
+            subject="$(node ../tools/index-delta.js /tmp/fp-data-before.json fingerprints.json)"
+            git commit -m "$subject [skip ci]"
+            git push
+          fi

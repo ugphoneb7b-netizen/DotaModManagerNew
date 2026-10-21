@@ -1,0 +1,918 @@
+/* ============ Home (all categories) ============ */
+/* No heading of its own. It was a title naming the app over a line counting the catalog,
+   and both were answered elsewhere: the tab strip says Каталог, Settings says when the
+   catalog was last fetched. The screen now opens on mods. */
+.recent-row {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: 240px;
+  gap: 13px;
+  overflow-x: auto;
+  /* headroom so hover lift, borders and glows don't get clipped */
+  padding: 10px 8px 16px;
+  margin: -10px -8px 18px;
+  scroll-snap-type: x proximity;
+}
+.recent-row .card { scroll-snap-align: start; }
+
+.cat-tiles {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+  gap: 20px;
+  padding: 12px 22px 26px 22px;
+}
+.cat-tile {
+  position: relative;
+  border-radius: var(--radius);
+  overflow: hidden;
+  border: 1px solid var(--border);
+  cursor: pointer;
+  aspect-ratio: 16 / 9;
+  background: var(--surface-solid);
+  transition: transform 0.3s var(--ease), border-color 0.25s, box-shadow 0.3s var(--ease);
+  box-shadow: 4px 10px 22px rgba(0, 0, 0, 0.38);
+  transform: perspective(1000px) rotateY(15deg) rotateX(0deg);
+  transform-origin: center center;
+  transform-style: preserve-3d;
+  will-change: transform;
+}
+.cat-tile:hover {
+  transform: perspective(1000px) rotateY(0deg) rotateX(0deg) translateY(-6px) scale(1.03);
+  border-color: var(--primary);
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.6), 0 0 28px color-mix(in srgb, var(--md-primary) 22%, transparent);
+  z-index: 5;
+}
+.cat-tile img, .cat-tile video {
+  width: 100%; height: 100%;
+  object-fit: cover;
+  display: block;
+  transition: transform 0.4s var(--ease);
+}
+.cat-tile:hover img, .cat-tile:hover video { transform: scale(1.06); }
+.cat-tile .ct-shade {
+  position: absolute;
+  inset: 0;
+  /* The upstream artwork has the category name painted into it in English, and we draw our
+     own label over the same tile. Weighting the shade lets ours win instead of the two
+     names competing at the bottom of a small picture. */
+  background: linear-gradient(180deg, rgba(4, 4, 8, 0.1) 0%, rgba(4, 4, 8, 0.55) 55%, rgba(4, 4, 8, 0.96) 100%);
+}
+.cat-tile .ct-label {
+  position: absolute;
+  left: 14px;
+  right: 14px;
+  bottom: 10px;
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+.cat-tile .ct-name { font-family: var(--font-head); font-weight: 700; font-size: var(--text-sm); }
+
+.section-h {
+  font-family: var(--font-head);
+  font-size: 16px;
+  font-weight: 700;
+  margin: 4px 0 13px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--text);
+}
+.section-h .ms { color: var(--primary-soft); font-size: 19px; }
+.section-h::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+
+/* ============ Mod grid ============ */
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+  gap: 20px;
+  position: relative;
+  padding: 12px 22px 26px 22px;
+}
+/* Heroes is 463 cards and the window shows about fifteen. Left to itself the browser lays
+   out and paints all of them on every frame of a scroll; this lets it skip whatever is far
+   off screen and remember how tall it was, so the scrollbar does not lie. Measured on that
+   category: 15.8ms average frame and 74 frames over 20ms became 7.0ms and none.
+   On the grid only - the "recently added" strip snaps as it scrolls, and skipping the
+   rendering of a snap target is asking for an argument between the two. */
+.grid .card {
+  /* keep layout normal so 3D transformed elements aren't skipped by Chromium */
+}
+.group-title {
+  grid-column: 1 / -1;
+  font-family: var(--font-head);
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--primary-soft);
+  margin-top: 12px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+/* ============ Item Builder Hub (#itemHub) ============ */
+#itemHub .grid {
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 18px;
+  padding: 12px 22px 28px 22px;
+}
+#itemHub .card {
+  max-height: 220px;
+}
+#itemHub .card-media {
+  aspect-ratio: 16 / 10;
+  max-height: 125px;
+}
+#itemHub .card-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center 20%;
+}
+#itemHub .card-body {
+  padding: 8px 12px 10px;
+  min-height: 50px;
+  max-height: 65px;
+}
+#itemHub .card-name {
+  font-size: 13px;
+}
+#itemHub .card-meta {
+  font-size: 11px;
+}
+
+.item-hero-section {
+  margin-bottom: 24px;
+}
+.item-slot-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+  gap: 14px;
+}
+.item-slot-card {
+  padding: 0;
+  text-align: left;
+  transform: none !important;
+  max-height: 210px;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.3) !important;
+}
+.item-slot-card:hover {
+  transform: translateY(-4px) scale(1.02) !important;
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.5), 0 0 20px color-mix(in srgb, var(--md-primary) 20%, transparent) !important;
+}
+.item-slot-card .card-media {
+  aspect-ratio: 16 / 10;
+  max-height: 115px;
+  background: var(--bg-elev);
+}
+.item-slot-thumb,
+.item-slot-thumb img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.item-slot-card .card-body {
+  padding: 10px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.item-slot-card .card-name {
+  font-size: 13.5px;
+  font-weight: 700;
+  display: -webkit-box;
+  -webkit-line-clamp: 1;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.item-slot-card .card-meta span {
+  font-size: 11.5px;
+  color: var(--text-faint);
+  display: -webkit-box;
+  -webkit-line-clamp: 1;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.item-picker-modal {
+  width: min(1360px, calc(98vw / var(--content-zoom)));
+  max-height: calc(92vh / var(--content-zoom));
+}
+/* .modal-body is drawn after this file: two classes, so these win and the bar below meets the edges */
+.modal-body.item-picker-body {
+  gap: var(--space-4);
+  padding: var(--space-4) var(--space-5) var(--space-5);
+}
+.modal-body.item-picker-body:has(> .item-picker-foot) { padding-bottom: 0; }
+.item-picker-head {
+  position: sticky;
+  top: 0;
+  z-index: var(--z-bar);
+  align-items: flex-start;
+  justify-content: space-between;
+  padding-bottom: var(--space-2);
+  background: linear-gradient(180deg, var(--surface-solid) 82%, transparent);
+}
+.item-picker-head .modal-close {
+  position: static;
+  flex-shrink: 0;
+}
+/* the catalog's own search field, sized by itself rather than by the column it sits in */
+.item-picker-search { align-self: flex-start; }
+.item-hero-slots { margin-top: var(--space-4); }
+.item-fx-head { margin-top: var(--space-5); }
+.item-fx-hint { margin-bottom: var(--space-3); }
+.item-back { margin-bottom: var(--space-2); }
+.item-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+/* What the window will put on, and the one button that does it: it stays in view down a long
+   list, since nothing reaches the game until it is pressed. */
+.item-picker-foot {
+  position: sticky;
+  bottom: 0;
+  z-index: var(--z-bar);
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  margin: 0 calc(-1 * var(--space-5));
+  padding: var(--space-3) var(--space-5);
+  background: var(--surface-solid);
+  border-top: 1px solid var(--border);
+}
+.item-picker-sum {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  font-size: var(--text-sm);
+  color: var(--text-muted);
+}
+.item-picker-sum b { color: var(--text); font-weight: 600; }
+/* what is known to go wrong with the chosen item in the game (src/arcana-notes.ts), under its name
+   and next to the button that puts it on, where it is read before the click */
+.item-picker-sum .item-note {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-1);
+  margin-top: var(--space-px);
+  white-space: normal;
+  font-size: var(--text-xs);
+  color: var(--warning);
+}
+.item-picker-sum .item-note .ms { font-size: var(--text-sm); }
+.item-picker-foot .btn { flex-shrink: 0; }
+
+.item-pick-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: 14px;
+}
+.item-pick-card {
+  padding: 0;
+  text-align: left;
+  transform: none !important;
+  max-height: 200px;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.3) !important;
+}
+.item-pick-card:hover {
+  transform: translateY(-4px) scale(1.02) !important;
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.5), 0 0 20px color-mix(in srgb, var(--md-primary) 20%, transparent) !important;
+}
+.item-pick-card .card-media {
+  aspect-ratio: 16 / 10;
+  max-height: 110px;
+  background: var(--bg-elev);
+}
+.item-pick-card .card-body {
+  padding: 8px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-height: 48px;
+  max-height: 60px;
+}
+.item-pick-card .card-name {
+  font-size: 13px;
+  font-weight: 700;
+  display: -webkit-box;
+  -webkit-line-clamp: 1;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.item-pick-card.picked {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 1px var(--primary), 0 0 18px color-mix(in srgb, var(--md-primary) 20%, transparent);
+}
+.item-pick-card .card-meta {
+  gap: var(--space-2);
+  font-size: 11px;
+}
+.item-pick-card .card-meta span { min-height: 1em; }
+/* The global dimming of [disabled] goes on what is inside, not on the card: an effect before an
+   item is chosen, a piece of a set the builder does not put on. The card's entrance used to hold
+   it at full opacity by accident (fill both); it lets go now (.card above), so this says it. */
+.item-pick-card:disabled,
+.item-pick-card.is-disabled { opacity: 1; }
+.item-pick-card:disabled > *,
+.item-pick-card.is-disabled > * { opacity: var(--disabled-opacity); }
+@media (max-width: 980px) {
+  .item-pick-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+@media (max-width: 720px) {
+  .item-pick-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@keyframes cardIn {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+  transition: transform 0.3s var(--ease), border-color 0.25s, box-shadow 0.3s var(--ease), background 0.25s;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  box-shadow: 4px 10px 22px rgba(0, 0, 0, 0.38);
+  transform: perspective(1000px) rotateY(15deg) rotateX(0deg);
+  transform-origin: center center;
+  transform-style: preserve-3d;
+  will-change: transform;
+  max-height: 270px;
+}
+.card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 1px;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.12) 0%, transparent 60%);
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+}
+.card:hover {
+  transform: perspective(1000px) rotateY(0deg) rotateX(0deg) translateY(-6px) scale(1.03);
+  border-color: color-mix(in srgb, var(--md-primary) 70%, transparent);
+  background: var(--surface-hover);
+  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.6), 0 0 30px color-mix(in srgb, var(--md-primary) 24%, transparent);
+  z-index: 5;
+}
+.card-media {
+  aspect-ratio: 16 / 10;
+  max-height: 145px;
+  background: var(--bg-elev);
+  position: relative;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+.card-media img,
+.card-media video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center 25%;
+  display: block;
+  transition: transform 0.35s var(--ease);
+}
+.card:hover .card-media img,
+.card:hover .card-media video {
+  transform: scale(1.06);
+}
+.noimg {
+  width: 100%; height: 100%;
+  display: flex; align-items: center; justify-content: center;
+  color: var(--text-faint);
+}
+/* What the mod changes, at the foot of the picture. It used to sit on top, which is where
+   the two buttons now live: a card has one busy corner, not two.
+   One line, always. Wrapping looked like a bug rather than a second line: the row is pinned
+   to the bottom, so a second chip pushed the block up into the middle of the picture -
+   measured across the catalog, 30 of the 53 hero-item cards did it. A chip that will not fit
+   is trimmed with an ellipsis instead. The room kept on the right is the room the looks
+   actually take, counted in dots rather than guessed at. */
+.media-tags {
+  position: absolute;
+  bottom: 8px;
+  left: 8px;
+  right: calc(8px + var(--looks, 0) * 23px);
+  display: flex;
+  flex-wrap: nowrap;
+  gap: 4px;
+  pointer-events: none;
+  overflow: hidden;
+}
+.mtag {
+  min-width: 0;
+  flex: 0 1 auto;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: rgba(14, 12, 20, 0.68);
+  backdrop-filter: blur(10px);
+  color: var(--primary-soft);
+  border: 1px solid color-mix(in srgb, var(--md-primary) 28%, transparent);
+}
+/* Installed is the state of the whole mod, so it is the state of the whole card: a green
+   edge and a glow that survives being scrolled past at speed. It used to be a chip reading
+   УСТАНОВЛЕН among the chips describing what the mod changes - one more thing to read in a
+   corner that already had three. The green is fixed rather than themed: it means the same
+   thing under every hero, and none of the eight palettes owns it. */
+.card.installed {
+  border-color: var(--installed);
+  box-shadow: 0 0 0 1px var(--installed), 0 0 20px color-mix(in srgb, var(--installed) 30%, transparent);
+}
+.card.installed:hover {
+  border-color: var(--installed);
+  box-shadow: 0 14px 40px rgba(5, 3, 12, 0.55), 0 0 0 1px var(--installed),
+    0 0 30px color-mix(in srgb, var(--installed) 45%, transparent);
+}
+.card.installed .card-body { background: color-mix(in srgb, var(--installed) 7%, transparent); }
+/* The looks a mod comes in, switchable without opening it. They used to be decoration - four
+   dots saying "this one has colours" - and the only way to see a colour was to open the mod
+   and come back. Now they are the control they looked like. */
+.media-swatches {
+  position: absolute;
+  bottom: 10px;
+  right: 8px;
+  display: flex;
+  /* 6, not 5: a dot is smaller than WCAG 2.2's 24px target, which it may be only with 24px from
+     its centre to the next one's. 18 + 6 is that; 18 + 5 failed axe's target-size the night a
+     mod with styles reached "Recently added" (2026-10-14). */
+  gap: 6px;
+  z-index: 3;
+}
+.swatch-dot {
+  width: 18px; height: 18px;
+  padding: 0;
+  border-radius: 50%;
+  border: none;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.6);
+  opacity: 0.75;
+  outline: 2px solid transparent;
+  outline-offset: 2px;
+  transition: opacity 0.15s var(--ease-standard), outline-color 0.15s var(--ease-standard), transform 0.15s var(--ease-standard);
+}
+.swatch-dot:hover { opacity: 1; transform: scale(1.12); }
+.swatch-dot.active { opacity: 1; outline-color: var(--md-on-surface); }
+.swatch-dot:focus-visible { outline-color: var(--primary); }
+.card-body {
+  padding: 10px 12px 11px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex: 1;
+  min-height: 56px;
+  max-height: 80px;
+  overflow: hidden;
+}
+.card-name {
+  font-weight: 700;
+  font-size: 13.5px;
+  line-height: 1.3;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+/* The name is the card's button for a keyboard (catalog/card/CardName.tsx), and looks exactly like
+   the text it was; focus gives it the ring every control gets (tokens.css). */
+.card-open {
+  font: inherit;
+  color: inherit;
+  letter-spacing: inherit;
+  text-align: inherit;
+  background: none;
+  border: 0;
+  padding: 0;
+  margin: 0;
+  cursor: inherit;
+}
+.card-meta {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: nowrap;
+  margin-top: auto;
+  font-size: 11px;
+  color: var(--text-faint);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+/* A tool's line: what the card leads to on the left, what comes with the tool on the right.
+   Same shape the catalog's own site gives these cards. The pills sit here rather than on the
+   picture because a tool's picture is a screenshot of its window, and covering it explains
+   nothing. */
+.card-meta-split { flex-wrap: nowrap; justify-content: space-between; }
+.card-pills { display: flex; gap: 5px; min-width: 0; }
+.card-meta-split .mtag { backdrop-filter: none; background: var(--surface); }
+/* a whole-map terrain built for an older map than the game's: read over the picture */
+.mtag.warn {
+  color: var(--warning);
+  background: rgba(40, 30, 6, 0.78);
+  border-color: rgba(251, 191, 36, 0.45);
+}
+.card-meta-split .mtag.danger {
+  color: var(--warning);
+  background: rgba(251, 191, 36, 0.11);
+  border-color: rgba(251, 191, 36, 0.35);
+}
+
+.author-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11px;
+  font-weight: 600;
+  font-family: inherit;
+  color: var(--text-muted);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 2px 10px;
+  transition: all 0.2s var(--ease);
+}
+.author-chip .ms { font-size: 12px; }
+/* what a modder or a sender did, quieter than who they are, so the author still leads */
+.author-chip .credit-role { color: var(--text-faint); font-weight: 500; }
+.author-chip.clickable { cursor: pointer; }
+.author-chip.clickable:hover {
+  border-color: var(--primary);
+  color: var(--primary-soft);
+  box-shadow: 0 0 14px color-mix(in srgb, var(--md-primary) 20%, transparent);
+}
+
+.empty-note {
+  color: var(--text-muted);
+  padding: 48px 0;
+  text-align: center;
+  grid-column: 1 / -1;
+}
+
+/* The screen somebody sees instead of the catalog when the network is gone.
+   It used to be one line of Node's own words; this is the same note with room to say what
+   still works, because an empty grid with "fetch failed" on it reads as a broken app. */
+.offline-note {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  padding: 64px 24px;
+}
+.offline-note b { color: var(--text); font-size: 17px; }
+.offline-note > span { max-width: 46ch; line-height: 1.5; }
+.offline-icon { font-size: 44px; opacity: 0.5; }
+.offline-note .btn { margin-top: 6px; }
+/* The technical half stays on screen for a bug report, and out of the way of everyone else. */
+.offline-detail {
+  margin-top: 8px;
+  font-size: 11px;
+  opacity: 0.45;
+  user-select: text;
+}
+
+/* ============ Preview badge on cards ============ */
+.mtag-play {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  padding: 5px 11px 5px 8px;
+  border-radius: 999px;
+  background: rgba(14, 12, 20, 0.72);
+  backdrop-filter: blur(10px);
+  color: var(--primary-soft);
+  border: 1px solid color-mix(in srgb, var(--md-primary) 32%, transparent);
+  cursor: pointer;
+  transition: all 0.22s var(--ease);
+  z-index: 2;
+}
+.mtag-play .ms { font-size: 14px; }
+.mtag-play:hover {
+  background: color-mix(in srgb, var(--md-primary) 35%, transparent);
+  box-shadow: 0 0 18px color-mix(in srgb, var(--md-primary) 40%, transparent);
+  transform: translateY(-1px);
+  color: #fff;
+}
+
+/* Put this mod in the list to install. It shares the corner with the star: both are ways of
+   saying "this one", and both belong on the picture, where the deciding happens. Quiet until
+   the card is under the cursor, and loud from then on once the mod is actually in the list.
+   The shift that makes room for the star is in the .card-actions rules further down. */
+.card-add {
+  z-index: 3;
+  width: 30px;
+  height: 30px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid color-mix(in srgb, var(--md-primary) 28%, transparent);
+  border-radius: 999px;
+  background: rgba(14, 12, 20, 0.68);
+  backdrop-filter: blur(10px);
+  color: var(--primary-soft);
+  opacity: 0;
+}
+.card:hover .card-add, .card-add:focus-visible, .card-add.on { opacity: 1; }
+.card-add:hover { border-color: var(--primary); background: var(--primary-dim); }
+.card-add .ms { font-size: 18px; }
+.card-add.on {
+  background: var(--primary);
+  border-color: transparent;
+  color: var(--on-primary);
+}
+
+/* ============ Favorites (star on cards / in the modal) ============ */
+.fav-btn {
+  z-index: 3;
+  width: 30px;
+  height: 30px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid color-mix(in srgb, var(--md-primary) 28%, transparent);
+  border-radius: 999px;
+  background: rgba(14, 12, 20, 0.68);
+  backdrop-filter: blur(10px);
+  color: var(--text-muted);
+  opacity: 0;
+  transform: scale(0.86);
+  transition: opacity 0.2s var(--ease), transform 0.2s var(--ease), color 0.2s, background 0.2s, border-color 0.2s;
+}
+.card:hover .fav-btn, .fav-btn:focus-visible { opacity: 1; transform: none; }
+.fav-btn:hover { color: var(--accent); background: rgba(251, 113, 133, 0.22); border-color: rgba(251, 113, 133, 0.45); }
+.fav-btn.on { opacity: 1; transform: none; color: var(--accent); border-color: rgba(251, 113, 133, 0.45); }
+.fav-btn .ms { font-size: 17px; }
+/* the icon font ships a FILL axis — a starred mod gets the solid heart */
+.fav-btn.on .ms, .rail-item.fav .ms { font-variation-settings: 'FILL' 1; }
+/* The two buttons share one corner and take turns holding it. Without the cursor, whatever
+   is true of the mod stands there: the tick if it is in the install list, the heart if it is
+   starred, both if both. Bring the cursor in and the heart takes the corner while the tick
+   steps aside to make room, which is the same movement in reverse when the cursor leaves. */
+.card-actions {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  z-index: 3;
+}
+.card-actions .fav-btn, .card-actions .card-add {
+  position: absolute;
+  top: 0;
+  right: 0;
+}
+.card-actions .card-add { transition: opacity var(--dur-base) var(--ease-standard), transform var(--dur-base) var(--ease-spring), background var(--dur-fast) var(--ease-standard), border-color var(--dur-fast) var(--ease-standard); }
+/* room for the heart: it appears on hover, and it is already there on a starred mod */
+.card:hover .card-actions .card-add,
+.card-actions .fav-btn.on ~ .card-add { transform: translateX(-36px); }
+.card:hover .card-actions .card-add.on,
+.card-actions .fav-btn.on ~ .card-add.on { transform: translateX(-36px); }
+/* in the modal the star sits beside the title and is always visible */
+.modal-title-row .fav-btn {
+  position: static;
+  opacity: 1;
+  transform: none;
+  flex-shrink: 0;
+  width: 34px;
+  height: 34px;
+  backdrop-filter: none;
+  background: var(--surface);
+  border-color: var(--border);
+}
+.modal-title-row .fav-btn .ms { font-size: 19px; }
+.modal-title-row .fav-btn.on { border-color: rgba(251, 113, 133, 0.45); }
+.rail-item.fav .ms { color: var(--accent); }
+
+/* ============ Cosmetics: same .card/.grid/.toolbar as the mod catalog ============ */
+
+/* icon-loader target inside a .card-media — sized to fill it, same as a plain <img> would */
+.card-thumb { display: block; width: 100%; height: 100%; }
+.card-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+.cat-search { width: 240px; }
+.cat-search input { border: none; background: none; color: var(--text); font: inherit; font-size: 13px; width: 100%; outline: none; }
+
+/* A picture the wiki simply does not have: the tile still has to look like a finished
+   card, not a broken image — the slot's own icon on the same soft glow as everywhere. */
+.card-thumb .noimg {
+  background: radial-gradient(circle at 50% 42%, color-mix(in srgb, var(--md-primary) 16%, transparent), transparent 68%);
+}
+.card-thumb .noimg .ms { font-size: 34px; }
+
+/* a look with no picture on the wiki: the same soft glow the cards use, not an empty box */
+.modal-media.cos {
+  display: flex; align-items: center; justify-content: center;
+  background: radial-gradient(circle at 50% 40%, color-mix(in srgb, var(--md-primary) 18%, transparent), transparent 70%), var(--bg-elev);
+}
+.modal-media.cos .noimg .ms { font-size: 64px; }
+
+/* "…and N more" under a search grid that was cut short */
+.search-more { color: var(--text-faint); font-size: 12.5px; padding: 14px 2px 0; text-align: center; }
+
+/* Library: head of the cosmetics section — its own select-all, count and bulk switch,
+   mirroring .lib-listhead above the mods */
+.lib-section-head {
+  display: flex; align-items: center; gap: 12px;
+  margin-top: 18px; padding: 0 4px 4px;
+  border-bottom: 1px solid var(--border);
+}
+.lib-section-head .lib-selectall {
+  font-family: var(--font-head); font-size: 13.5px; font-weight: 700;
+  color: var(--primary-soft);
+}
+.lib-section-head .lib-selectall .ms { font-size: 16px; }
+.lib-section-cnt { color: var(--text-faint); font-size: 11.5px; margin-right: auto; }
+
+/* A second section on the same screen wants air above it. */
+.section-h.spaced { margin-top: var(--space-6); }
+/* The stand-in glyph for a missing picture. The card and cosmetic-modal rules above are more
+   specific and still win; they never used to, because this was an inline size. */
+.noimg .ms { font-size: var(--icon-xl); }
+
+
+/* What a mod changes sits a step below what the app has done with it: the first is scanned
+   while scrolling a category, the second is acted on. Same information, less shouting - and
+   the card opens into a full picture where all of it is spelled out anyway. */
+.mtag.soft {
+  text-transform: none;
+  letter-spacing: 0;
+  font-size: 10px;
+  font-weight: var(--weight-semibold);
+  padding: 3px 8px;
+  color: var(--text-muted);
+  border-color: transparent;
+  background: rgba(14, 12, 20, 0.6);
+}
+
+/* ============ Heroes: the portrait grid ============
+   The category opens on heroes rather than on 463 mods in a row, laid out like the game's own
+   hero grid: wide portraits, tightly packed, the name only where it does not cover the face. */
+.hero-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(132px, 1fr));
+  gap: 8px;
+}
+.hero-tile {
+  position: relative;
+  aspect-ratio: 16 / 9;
+  padding: 0;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  background: var(--bg-elev);
+  cursor: pointer;
+  color: var(--text);
+  text-align: left;
+  transition: transform 0.2s var(--ease), border-color 0.2s, box-shadow 0.2s var(--ease);
+}
+.hero-tile:hover {
+  transform: translateY(-2px) scale(1.04);
+  border-color: var(--primary);
+  box-shadow: 0 8px 24px color-mix(in srgb, var(--primary) 30%, transparent);
+  z-index: 1;
+}
+.hero-tile:focus-visible { outline: none; box-shadow: var(--focus-ring); }
+.hero-art {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  color: var(--text-faint);
+}
+.hero-art img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  /* the selection portraits are taller than the tile: keep the face, lose the feet */
+  object-position: center 22%;
+  filter: saturate(0.85) brightness(0.9);
+  transition: filter 0.2s;
+}
+/* a mod's own picture standing in for a missing portrait is a scene, not a face */
+.hero-art img.stand-in { object-position: center 35%; }
+.hero-tile:hover .hero-art img { filter: none; }
+.hero-art .ms { font-size: 28px; }
+.hero-name {
+  position: absolute;
+  left: 0; right: 0; bottom: 0;
+  padding: 14px 7px 4px;
+  font-size: 11.5px;
+  font-weight: 700;
+  line-height: 1.2;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8);
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.85), transparent);
+  color: #fff;
+}
+.hero-count {
+  position: absolute;
+  top: 4px; right: 4px;
+  min-width: 20px;
+  padding: 1px 6px;
+  border-radius: var(--radius-full);
+  background: rgba(0, 0, 0, 0.6);
+  color: #fff;
+  font-size: 10.5px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  text-align: center;
+}
+.hero-installed {
+  position: absolute;
+  top: 4px; left: 4px;
+  font-size: 16px;
+  color: var(--installed);
+  text-shadow: 0 0 6px rgba(0, 0, 0, 0.8);
+}
+.hero-tile.installed { border-color: color-mix(in srgb, var(--installed) 55%, var(--border)); }
+.hero-back .ms { font-size: 16px; }
+
+/* grid / list switch in the heroes toolbar */
+.layout-toggle {
+  display: inline-flex;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  overflow: hidden;
+}
+.layout-toggle .seg-btn {
+  border: 0;
+  background: none;
+  color: var(--text-muted);
+  padding: 5px 10px;
+  display: inline-flex;
+  align-items: center;
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s;
+}
+.layout-toggle .seg-btn .ms { font-size: 16px; }
+.layout-toggle .seg-btn:hover { color: var(--text); background: var(--surface); }
+.layout-toggle .seg-btn.active { background: var(--primary-dim); color: var(--primary-soft); }
+.layout-toggle .seg-btn:focus-visible { outline: none; box-shadow: var(--focus-ring-inset); }
+
+/* The arcana's window (catalog/arcana/ArcanaModal.tsx). The own colour is the system's picker,
+   kept under its pill and opened by it; before a colour is picked the pill carries a glyph in
+   place of the dot. The other build sits last in the row, quieter than the two buttons. */
+.arcana-own { position: relative; }
+.arcana-own:not([style])::before { display: none; }
+.arcana-own .ms { font-size: var(--text-md); }
+.arcana-own input { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0; pointer-events: none; }
+.modal-actions .arcana-mode { margin-left: auto; }
+/* The arcana's own picture is a 256-pixel item icon: drawn whole, at about twice its size rather
+   than four, in a shorter frame (the audio window's), its edges faded into the window's so its
+   square background does not show. */
+.modal-media.arcana-media { aspect-ratio: 16 / 7; }
+.modal-media.arcana-media img {
+  width: auto; max-width: 100%;
+  object-fit: contain;
+  mask-image: radial-gradient(ellipse 50% 50% at 50% 50%, #000 62%, transparent 100%);
+}
+
+/* Classic flat card layout when 3D tilt is disabled */
+[data-card-style="flat"] .cat-tile,
+[data-card-style="flat"] .card {
+  transform: none;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+}
+[data-card-style="flat"] .cat-tile:hover,
+[data-card-style="flat"] .card:hover {
+  transform: translateY(-4px) scale(1.02);
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.5), 0 0 24px color-mix(in srgb, var(--md-primary) 20%, transparent);
+}
+

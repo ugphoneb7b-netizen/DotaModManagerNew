@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- Search Console ownership for the old address, kept so the move can be watched from the
+     side it is moving away from. It sits above the refresh below on purpose: the verifier
+     reads the raw HTML rather than running it, and the tag has to be in the first part of
+     the head either way. -->
+<meta name="google-site-verification" content="4Lj6jQPFBoJFamznrXfyhg-TwaPUfZqb5Wkpx8rvlf8" />
+<title>Dota 2 Mod Manager has moved to dota2modmanager.com</title>
+<!--
+  The old address, kept alive as a signpost.
+
+  This page was the whole site until 2.0. It now points at dota2modmanager.com, and the
+  canonical link tells search engines to treat the new address as the real one, because
+  GitHub Pages serves static files and cannot answer with a 301.
+
+  What this page deliberately does NOT redirect: /p/, the preset share page. Every preset
+  link anybody has ever sent points there, and the app still generates links to that address,
+  so it stays exactly where it is. Privacy and Terms stay too, until the new site has its
+  own copies of them.
+
+  The redirect is instant for anybody with JavaScript, and Russian browsers are sent to the
+  Russian half rather than made to find it. The meta refresh below is the fallback, and the
+  link is the fallback to the fallback.
+-->
+<link rel="canonical" href="https://dota2modmanager.com/">
+<meta http-equiv="refresh" content="0; url=https://dota2modmanager.com/">
+<meta name="description" content="Dota 2 Mod Manager now lives at dota2modmanager.com.">
+<meta property="og:title" content="Dota 2 Mod Manager">
+<meta property="og:description" content="1100+ mods in one place. One click to install, one to take back.">
+<meta property="og:url" content="https://dota2modmanager.com/">
+<meta property="og:image" content="https://dota2modmanager.com/og.png">
+<style>
+  html { color-scheme: dark; }
+  body {
+    margin: 0; min-height: 100vh;
+    display: grid; place-items: center;
+    background: #141218; color: #e6e0e9;
+    font: 16px/1.6 system-ui, "Segoe UI", Roboto, sans-serif;
+    text-align: center; padding: 24px;
+  }
+  h1 { font-size: 22px; font-weight: 650; margin: 0 0 10px; letter-spacing: -0.01em; }
+  p { margin: 0 0 22px; color: #cac4d0; }
+  a.go {
+    display: inline-block; padding: 13px 24px; border-radius: 999px;
+    background: #d0bcff; color: #220a32; font-weight: 650; text-decoration: none;
+  }
+  a.go:hover { background: #e0d0ff; }
+</style>
+</head>
+<body>
+  <main>
+    <h1>Dota 2 Mod Manager has a home of its own</h1>
+    <p>The site moved to dota2modmanager.com. Taking you there now.</p>
+    <a class="go" href="https://dota2modmanager.com/">Go to dota2modmanager.com</a>
+  </main>
+  <script>
+    // Russian browsers land on the Russian half. Everyone else gets the root, which is
+    // English. `replace` rather than `assign` so the back button does not bounce.
+    var ru = (navigator.language || '').toLowerCase().indexOf('ru') === 0;
+    location.replace('https://dota2modmanager.com/' + (ru ? 'ru/' : ''));
+  </script>
+</body>
+</html>

@@ -1,0 +1,128 @@
+# The site rebuilds itself, because its numbers go stale on their own.
+#
+# The landing counts mods, downloads and releases at build time (site/src/lib/stats.ts), so a
+# static page is only ever as true as its last build. It was deployed by hand, which meant the
+# day after 2.2.0 shipped the page still said 2.1.0, 20,046 downloads and 1,090 mods while the
+# real figures were 2.2.0, 23,838 and 1,101. Nobody forgot: there was simply nothing to remind
+# anyone.
+#
+# Three reasons to rebuild, and all three are here:
+#   a release went out, so the version badge and the download count are wrong;
+#   the catalogue grew, which happens on its own schedule and needs no release at all;
+#   somebody edited the site.
+#
+# The Pages project takes direct uploads rather than building from git, so there is no deploy
+# hook to poke: the build happens here and wrangler uploads the result.
+name: Site
+
+on:
+  # after a release, not at the same time as one - the release workflow has to finish
+  # publishing before the download count means anything
+  workflow_run:
+    workflows: ['Release']
+    types: [completed]
+  schedule:
+    - cron: '17 5 * * *'
+  # The site reads a few files from outside site/: the shared-build page, the terms, the
+  # code-signing and privacy policies, and the signed config it mirrors. A change to one of those
+  # is a change to the site.
+  push:
+    branches: [main]
+    paths: ['site/**', '.github/workflows/site.yml', 'docs/p/**', 'docs/terms/**', 'docs/code-signing-policy*.md', 'PRIVACY*.md', 'config/app.json*']
+  # A pull request that touches the site gets the build and the check on its output, and nothing
+  # is deployed. Dependabot's Astro 7 bump passed every test in this repository while building
+  # the site as version 0.0.0, because nothing built the site before a merge.
+  pull_request:
+    paths: ['site/**', '.github/workflows/site.yml', 'docs/p/**', 'docs/terms/**', 'docs/code-signing-policy*.md', 'PRIVACY*.md', 'config/app.json*']
+  workflow_dispatch:
+
+# Read only. This job used to commit the IndexNow ledger back, which is why it once needed write
+# and the owner's token; the ledger moved to the Actions cache and nothing here writes to the
+# repository any more. A workflow that keeps a permission it stopped needing is a workflow that
+# hands its token to whatever gets added to it next.
+permissions:
+  contents: read
+
+# Deploys queue behind each other and never cancel. A pull request's build is a group of its own,
+# and a newer push to it replaces the run still going.
+concurrency:
+  group: ${{ github.event_name == 'pull_request' && format('site-pr-{0}', github.event.pull_request.number) || 'site-deploy' }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          # /activity.svg is drawn from git log and the release tags, so the shallow checkout a
+          # site build would otherwise get has nothing to draw. Without this the card renders
+          # its "no history here" state instead of the chart.
+          fetch-depth: 0
+
+      # The hero and category pages and their previews are written by the catalog job to the
+      # catalog-data branch (DECISIONS.md, "The catalog job commits to a branch of its own"),
+      # at the paths they take here.
+      - name: Bring in the catalog data
+        run: |
+          git fetch --no-tags --depth=1 origin catalog-data
+          git checkout FETCH_HEAD -- site/src/data/heroes.json site/src/data/categories.json site/public/mods
+
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: site/package-lock.json
+
+      - name: Install
+        working-directory: site
+        run: npm ci
+
+      # The build reaches out to the catalogue and to the GitHub API for the four numbers on
+      # the landing. If either is unreachable it falls back to committed figures rather than
+      # failing, so a bad minute at GitHub costs freshness and not a deploy.
+      - name: Build
+        working-directory: site
+        run: npm run build
+
+      # The build reads the app's version and each page's card off the disk around it, and both
+      # have gone wrong once without an error. site/tools/check-build.mjs says how.
+      - name: Check what the build read
+        working-directory: site
+        run: node tools/check-build.mjs
+
+      - name: Deploy to Cloudflare Pages
+        if: github.event_name != 'pull_request'
+        working-directory: site
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: npx wrangler pages deploy dist --project-name dota2modmanager --branch main
+
+      - name: Restore the IndexNow ledger
+        if: github.event_name != 'pull_request'
+        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6
+        with:
+          path: indexnow.state.json
+          key: indexnow-ledger-${{ github.run_id }}
+          restore-keys: indexnow-ledger-
+
+      # Bing and Yandex are told the pages changed. Google does not take part and finds them
+      # its own way, so a failure here is a slower crawl and nothing more.
+      - name: Tell IndexNow
+        if: github.event_name != 'pull_request'
+        working-directory: site
+        continue-on-error: true
+        run: npm run indexnow
+
+      # Which addresses went out, so the next deploy announces what changed rather than all
+      # 358 again. Cached rather than committed: it is this job's own ledger, nothing else
+      # reads it, and a commit per deploy is how the log filled up with bot noise. Losing the
+      # cache costs one over-announcement, which search engines are happy to receive.
+      - name: Remember what was announced
+        uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6
+        if: always() && github.event_name != 'pull_request'
+        with:
+          path: indexnow.state.json
+          key: indexnow-ledger-${{ github.run_id }}

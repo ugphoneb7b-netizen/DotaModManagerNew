@@ -1,0 +1,574 @@
+/* ============ Shell layout ============ */
+#app {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+}
+
+/* ============ Title bar ============ */
+/* The bar owns a layer of its own, above the content it sits over.
+ *
+ * It has a backdrop-filter, and that makes it a stacking context: everything inside it,
+ * including an open dropdown, is trapped at the bar's own level. The bar had none, so it
+ * painted in document order - underneath the catalog's cards, which do claim a level. The
+ * help menu therefore slid behind the mods as soon as the page scrolled under it. */
+#titlebar {
+  position: relative;
+  z-index: var(--z-bar);
+  zoom: var(--top-zoom);
+  container-type: inline-size;
+  height: var(--tb-h);
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 0 0 0 16px;
+  background: color-mix(in srgb, var(--md-surface) 82%, transparent);
+  backdrop-filter: blur(24px) saturate(180%);
+  border-bottom: 1px solid var(--border);
+  box-shadow: 0 2px 14px rgba(0, 0, 0, 0.25);
+  -webkit-app-region: drag;
+}
+#titlebar button, #titlebar input, #titlebar .tb-search { -webkit-app-region: no-drag; }
+
+.tb-brand {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--primary-soft);
+  flex-shrink: 0;        /* never let a crowded title bar wrap the product name */
+  white-space: nowrap;
+}
+.tb-title {
+  font-family: var(--font-head);
+  font-weight: 700;
+  font-size: 13.5px;
+  color: var(--text);
+  letter-spacing: 0.02em;
+}
+.tb-sub {
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--primary-soft);
+  text-transform: uppercase;
+  letter-spacing: 0.16em;
+  padding: 2px 8px;
+  border: 1px solid color-mix(in srgb, var(--primary) 35%, transparent);
+  border-radius: 20px;
+  background: var(--primary-dim);
+  box-shadow: 0 0 10px var(--primary-glow);
+}
+
+/* The hero the window is wearing, and the way to change it. Sized to the title bar's own
+   text rather than to a button: it is a face sitting next to the name, not a control asking
+   to be pressed - which is exactly how it reads on the site this came from. */
+.tb-mascot {
+  border: none;
+  background: none;
+  padding: 0;
+  line-height: 0;
+  border-radius: 50%;
+  flex-shrink: 0;
+  transition: transform var(--dur-base) var(--ease-spring), filter var(--dur-base) var(--ease-standard);
+}
+.tb-mascot img { width: 22px; height: 22px; display: block; }
+.tb-mascot:hover { transform: scale(1.18) rotate(-6deg); }
+.tb-mascot:active { transform: scale(0.94); }
+/* The hero turns away and the new one turns back. The window changes colour at the halfway
+   point, where the face is smallest, so the recolour and the spin read as one event. */
+.tb-mascot.spinning { animation: mascotSpin var(--dur-medium-long) var(--ease-standard); }
+.tb-mascot.spinning:hover { transform: none; }
+@keyframes mascotSpin {
+  0% { transform: rotate(0) scale(1); }
+  50% { transform: rotate(180deg) scale(0.4); }
+  100% { transform: rotate(360deg) scale(1); }
+}
+.tb-mascot:focus-visible { outline: 2px solid var(--primary); outline-offset: 3px; }
+
+/* the nav gives way before the window buttons do: at a high UI scale the bar runs out of
+   room, and losing minimize/close is worse than scrolling the tabs */
+#tbNav {
+  display: flex;
+  gap: 2px;
+  height: 100%;
+  min-width: 0;
+  overflow-x: auto;
+  scrollbar-width: none;
+  -webkit-app-region: no-drag;  /* the strip is swiped, so it cannot also drag the window */
+  overscroll-behavior-x: contain;
+}
+#tbNav::-webkit-scrollbar { display: none; }
+/* only once it actually scrolls: fade the ends so the cut-off tab reads as "more this way" */
+#tbNav.scrollable {
+  -webkit-mask-image: linear-gradient(90deg, transparent 0, #000 16px, #000 calc(100% - 16px), transparent 100%);
+  mask-image: linear-gradient(90deg, transparent 0, #000 16px, #000 calc(100% - 16px), transparent 100%);
+}
+#tbNav.dragging { cursor: grabbing; }
+#tbNav.dragging .tb-tab { pointer-events: none; }
+.tb-tab {
+  position: relative;
+  flex-shrink: 0;
+  border: none;
+  background: none;
+  color: var(--text-muted);
+  font-size: 13.5px;
+  font-weight: 600;
+  padding: 0 14px;
+  height: 100%;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.22s var(--ease);
+}
+.tb-tab:hover {
+  color: var(--text);
+  background: rgba(255, 255, 255, 0.04);
+}
+.tb-tab.active {
+  color: var(--text);
+  background: linear-gradient(180deg, transparent 0%, color-mix(in srgb, var(--primary) 12%, transparent) 100%);
+}
+.tb-tab.active::after {
+  content: '';
+  position: absolute;
+  left: 8px;
+  right: 8px;
+  bottom: 0;
+  height: 3px;
+  border-radius: 3px 3px 0 0;
+  background: linear-gradient(90deg, var(--primary), var(--accent));
+  box-shadow: 0 -2px 14px var(--primary-glow), 0 0 8px var(--primary);
+}
+.tb-badge {
+  font-size: 10.5px;
+  background: var(--primary-dim);
+  color: var(--primary-soft);
+  border-radius: 20px;
+  padding: 1px 6px;
+  font-variant-numeric: tabular-nums;
+}
+.tb-badge:empty { display: none; }
+
+/* Help, standing where the Guides tab used to. Not a tab: it leaves the app instead of
+   changing what is showing, so it reads as a mark rather than a place. */
+.tb-help { position: relative; flex-shrink: 0; -webkit-app-region: no-drag; }
+.tb-help-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--hit-min);
+  height: var(--hit-min);
+  border: 0;
+  border-radius: var(--radius-full);
+  background: none;
+  color: var(--text-faint);
+  cursor: pointer;
+  transition: color var(--dur-fast) var(--ease-standard), background var(--dur-fast) var(--ease-standard);
+}
+.tb-help-btn .ms { font-size: var(--icon-md); }
+.tb-help-btn:hover { color: var(--text); background: var(--state-hover); }
+.tb-help-btn[aria-expanded='true'] { color: var(--text); background: var(--state-active); }
+.tb-help-btn:focus-visible { outline: none; box-shadow: var(--focus-ring); }
+
+.tb-menu {
+  position: absolute;
+  top: calc(100% + var(--space-1));
+  left: 0;
+  z-index: var(--z-overlay);
+  min-width: 176px;
+  padding: var(--space-1);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface-solid);
+  box-shadow: var(--shadow-3);
+  animation: tbMenuIn var(--dur-fast) var(--ease-decelerate);
+}
+@keyframes tbMenuIn {
+  from { opacity: 0; transform: translateY(-4px); }
+  to { opacity: 1; transform: none; }
+}
+.tb-menu-item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  width: 100%;
+  padding: var(--space-2) var(--space-3);
+  border: 0;
+  border-radius: var(--radius-xs);
+  background: none;
+  color: var(--text-muted);
+  font: inherit;
+  font-size: var(--text-sm);
+  font-weight: 600;
+  text-align: left;
+  cursor: pointer;
+}
+.tb-menu-item:hover { background: var(--state-hover); color: var(--text); }
+.tb-menu-item .ms { font-size: var(--icon-md); color: var(--primary-soft); }
+.tb-menu-out { margin-left: auto; font-size: var(--icon-sm) !important; color: var(--text-faint) !important; }
+
+.tb-spacer { flex: 1; }
+
+.tb-search {
+  position: relative;
+  display: flex;
+  align-items: center;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  height: 32px;
+  width: 210px;
+  min-width: 42px;
+  /* yields space before the tab strip does, so all tabs fit the default window */
+  flex-shrink: 2;
+  padding: 0 12px;
+  gap: 7px;
+  transition: border-color 0.25s var(--ease), background 0.25s var(--ease), width 0.3s var(--ease), box-shadow 0.25s var(--ease);
+}
+.tb-search:focus-within {
+  border-color: var(--primary);
+  background: color-mix(in srgb, var(--md-primary) 10%, transparent);
+  width: 300px;
+  box-shadow: 0 0 18px color-mix(in srgb, var(--md-primary) 20%, transparent);
+}
+.tb-search .ms { font-size: 16px; color: var(--text-faint); }
+.tb-search input {
+  flex: 1;
+  background: none;
+  border: none;
+  outline: none;
+  color: var(--text);
+  font-size: 13px;
+  font-weight: 500;
+  min-width: 0;
+}
+.tb-search input::placeholder { color: var(--text-faint); }
+.tb-search-clear {
+  border: none;
+  background: none;
+  color: var(--text-faint);
+  line-height: 0;
+  padding: 2px;
+  border-radius: 50%;
+}
+.tb-search-clear:hover { color: var(--text); }
+.tb-search-clear .ms { font-size: 14px; }
+
+/* How many mods are waiting to be installed. Disabled and grey until there are any: a count
+   of nothing is not worth a button, but the button has to be findable before it is needed. */
+.tb-queue {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 32px;
+  padding: 0 12px;
+  margin-left: 10px;
+  flex-shrink: 0;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text-faint);
+  font-size: 12.5px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  transition: color var(--dur-fast) var(--ease-standard), border-color var(--dur-fast) var(--ease-standard),
+    background var(--dur-fast) var(--ease-standard), box-shadow var(--dur-fast) var(--ease-standard);
+}
+.tb-queue .ms { font-size: 18px; }
+.tb-queue:disabled { cursor: default; }
+.tb-queue.has {
+  color: var(--primary-soft);
+  border-color: color-mix(in srgb, var(--md-primary) 45%, transparent);
+  background: var(--primary-dim);
+  box-shadow: 0 0 16px color-mix(in srgb, var(--md-primary) 22%, transparent);
+}
+.tb-queue.has:hover { border-color: var(--primary); }
+.tb-queue-count:empty { display: none; }
+
+/* Discord account, between the search and the window buttons */
+.tb-account { display: flex; align-items: center; margin-left: 10px; -webkit-app-region: no-drag; }
+.tb-account:empty { display: none; }
+.tb-login, .tb-user {
+  display: inline-flex; align-items: center; gap: 7px;
+  height: 32px; padding: 0 13px; max-width: 160px; flex-shrink: 0;
+  border-radius: 999px; border: 1px solid var(--border);
+  background: var(--surface); color: var(--text-muted);
+  font-size: 12.5px; font-weight: 600; cursor: pointer;
+  transition: border-color 0.2s var(--ease), background 0.2s var(--ease), color 0.2s var(--ease);
+}
+.tb-login:hover, .tb-user:hover { background: var(--surface-hover); border-color: var(--border-strong); color: var(--text); }
+.tb-login .ms, .tb-user .ms { font-size: 17px; }
+.tb-login:disabled { opacity: 0.5; cursor: default; }
+.tb-user img { width: 20px; height: 20px; border-radius: 50%; object-fit: cover; flex-shrink: 0; }
+.tb-user-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 96px; }
+
+.tb-controls { display: flex; height: 100%; flex-shrink: 0; margin-left: auto; }
+
+/* a cramped bar drops the wordmark before the tabs */
+#titlebar.narrow .tb-sub { display: none; }
+#titlebar.tiny .tb-title { display: none; }
+.tb-ctl {
+  width: 44px;
+  height: 100%;
+  border: none;
+  background: none;
+  color: var(--text-muted);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s, color 0.15s;
+}
+.tb-ctl:hover { background: var(--surface-hover); color: var(--text); }
+.tb-close:hover { background: #e81123; color: #fff; }
+
+/* ============ Category rail ============ */
+.cat-rail {
+  zoom: var(--rail-zoom);
+  width: var(--rail-w);
+  flex-shrink: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 14px 10px 60px 12px;
+  border-right: 1px solid var(--border);
+  background: color-mix(in srgb, var(--md-surface) 55%, transparent);
+  backdrop-filter: blur(14px);
+}
+.cat-rail.hidden { display: none; }
+
+.rail-section {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--text-faint);
+  padding: 14px 10px 6px;
+}
+.rail-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: calc(100% - 10px);
+  margin: 5px 5px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text-muted);
+  font-size: 13px;
+  font-weight: 600;
+  padding: 9px 13px;
+  border-radius: var(--radius-sm);
+  transition: transform 0.25s var(--ease), border-color 0.2s, background 0.2s, color 0.2s, box-shadow 0.25s var(--ease);
+  text-align: left;
+  transform: perspective(700px) rotateY(15deg) rotateX(0deg);
+  transform-origin: center center;
+  transform-style: preserve-3d;
+  box-shadow: 2px 5px 12px rgba(0, 0, 0, 0.35);
+  position: relative;
+  isolation: isolate;
+  will-change: transform;
+}
+.rail-item .ms { font-size: 17px; color: var(--text-faint); transition: color 0.2s, transform 0.2s; }
+.rail-item:hover {
+  background: var(--surface-hover);
+  border-color: color-mix(in srgb, var(--primary) 65%, var(--border-strong));
+  color: var(--text);
+  transform: perspective(700px) rotateY(15deg) rotateX(0deg) translateX(4px) scale(1.02);
+  box-shadow: 4px 8px 20px rgba(0, 0, 0, 0.55), 0 0 16px color-mix(in srgb, var(--primary) 28%, transparent);
+  z-index: 3;
+}
+.rail-item:hover .ms { color: var(--primary-soft); transform: scale(1.1); }
+.rail-item.active {
+  color: #fff;
+  border-color: var(--primary);
+  background: linear-gradient(135deg, color-mix(in srgb, var(--primary) 40%, transparent) 0%, color-mix(in srgb, var(--primary) 20%, var(--surface)) 100%);
+  transform: perspective(700px) rotateY(15deg) rotateX(0deg) translateX(5px) scale(1.03);
+  box-shadow: 0 0 0 1px var(--primary), 4px 10px 24px rgba(0, 0, 0, 0.6), 0 0 24px var(--primary-glow);
+  z-index: 4;
+}
+/* The highlight is one element that travels between items (catalog/rail/Rail.tsx, layoutId),
+   drawn under the item's own icon and label: isolation gives each item a stacking context of
+   its own, so z-index -1 lands behind the text and still in front of the rail. */
+.rail-active {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  border-radius: inherit;
+  background: linear-gradient(90deg, color-mix(in srgb, var(--primary) 40%, transparent), color-mix(in srgb, var(--primary) 12%, transparent));
+  box-shadow: inset 0 0 0 1.5px var(--primary), 0 0 24px var(--primary-glow);
+}
+.rail-item.active .ms { color: var(--primary); filter: drop-shadow(0 0 8px var(--primary-glow)); transform: scale(1.1); }
+.rail-cnt {
+  margin-left: auto;
+  font-size: 10.5px;
+  color: var(--text-faint);
+  font-variant-numeric: tabular-nums;
+}
+/* a cosmetic slot with something picked — a dot, not a count, since the number would
+   just be the size of the whole list */
+.rail-dot { margin-left: auto; width: 7px; height: 7px; border-radius: 50%; background: var(--primary-soft); flex-shrink: 0; }
+
+/* ============ View header ============ */
+.view-header {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+}
+.view-title { font-size: 24px; font-weight: 800; }
+.view-title .accent { color: var(--primary-soft); }
+.view-header .spacer { flex: 1; }
+
+/* ============ Status bar ============ */
+#statusbar {
+  zoom: var(--bottom-zoom);
+  height: var(--status-h);
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0 16px 0 18px;
+  font-size: 11.5px;
+  color: var(--text-muted);
+  border-top: 1px solid var(--border);
+  background: color-mix(in srgb, var(--md-surface) 68%, transparent);
+  backdrop-filter: blur(12px);
+}
+#dotaStatusText { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
+.dot { width: 7px; height: 7px; border-radius: 50%; background: var(--warning); flex-shrink: 0; }
+.dot.ok { background: var(--success); box-shadow: 0 0 8px rgba(52, 211, 153, 0.5); }
+.dot.bad { background: var(--danger); }
+/* launch + master-mods controls (status bar, right cluster) */
+.sb-right { margin-left: auto; display: flex; align-items: center; gap: 14px; flex-shrink: 0; padding-left: 8px; }
+
+.mods-switch {
+  display: inline-flex; align-items: center; justify-content: center; gap: 9px;
+  height: 34px; padding: 0 16px; box-sizing: border-box;
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 999px; color: var(--text-muted);
+  font-size: 12.5px; cursor: pointer; transition: border-color 0.15s, color 0.15s, background 0.15s;
+  -webkit-app-region: no-drag;
+}
+.mods-switch:hover { border-color: var(--border-strong); color: var(--text); background: var(--surface-hover); }
+.mods-switch:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
+.mods-switch b { color: var(--danger); font-weight: 700; letter-spacing: 0.3px; }
+.mods-switch.on b { color: var(--success); }
+.mods-switch-track {
+  position: relative; width: 30px; height: 16px; border-radius: 999px;
+  background: var(--danger); transition: background 0.2s;
+}
+.mods-switch.on .mods-switch-track { background: var(--success); }
+.mods-switch-thumb {
+  position: absolute; top: 2px; left: 2px; width: 12px; height: 12px;
+  border-radius: 50%; background: #fff; transition: transform 0.2s ease;
+}
+.mods-switch.on .mods-switch-thumb { transform: translateX(14px); }
+.mods-switch[disabled] { opacity: 0.5; cursor: default; }
+
+/* safe mode: off isn't a failure state like "mods: off" is, so it gets amber, not red */
+.safe-switch-icon { font-size: 15px; color: var(--text-faint); }
+.safe-switch.on .safe-switch-icon { color: var(--success); }
+.safe-switch:not(.on) .safe-switch-icon { color: var(--warning); }
+.safe-switch:not(.on) b { color: var(--warning); }
+.safe-switch:not(.on) .mods-switch-track { background: var(--warning); }
+.safe-switch { position: relative; }
+.safe-switch.trouble::after {
+  content: ''; position: absolute; top: -2px; right: -2px;
+  width: 9px; height: 9px; border-radius: 50%;
+  background: var(--danger); border: 2px solid var(--bg-base);
+}
+
+.btn-play {
+  -webkit-app-region: no-drag; height: 34px; padding: 0 22px; box-sizing: border-box;
+  display: inline-flex; align-items: center; justify-content: center;
+  font-size: 13px; font-weight: 600; letter-spacing: 0.2px;
+}
+.btn-play .ms { font-size: 18px; margin-right: -2px; }
+
+/* ============ Panel grips (resize / fold) ============ */
+/* Every edge between the three chrome panels and the content is a grip: drag it to resize,
+   double-click to reset, click its chevron to fold the panel away. */
+.panel-grip {
+  position: relative;
+  flex-shrink: 0;
+  background: transparent;
+  transition: background 0.18s var(--ease);
+  z-index: 6;
+}
+.panel-grip:hover, .panel-grip.dragging { background: var(--primary-dim); }
+.grip-h { height: 6px; cursor: row-resize; }
+.grip-v { width: 6px; cursor: col-resize; }
+
+.grip-toggle {
+  position: absolute;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--surface-solid);
+  color: var(--text-faint);
+  opacity: 0;
+  transition: opacity 0.18s var(--ease), color 0.18s, border-color 0.18s;
+}
+.panel-grip:hover .grip-toggle, .grip-toggle:focus-visible { opacity: 1; }
+.grip-toggle:hover { color: var(--primary-soft); border-color: var(--border-strong); }
+.grip-toggle .ms { font-size: 14px; }
+.grip-h .grip-toggle { left: 50%; transform: translateX(-50%); top: -6px; width: 36px; height: 16px; }
+.grip-v .grip-toggle { left: 50%; transform: translateX(-50%); top: 78px; width: 16px; height: 36px; }
+
+/* a folded panel keeps its chevron on screen, or there would be no way back */
+body.rail-folded #gripRail .grip-toggle,
+body.top-folded #gripTop .grip-toggle,
+body.bottom-folded #gripBottom .grip-toggle { opacity: 1; }
+
+body.rail-folded #catRail { display: none; }
+/* folded, the rail grip sits against the window edge — keep its chevron fully on screen */
+body.rail-folded #gripRail .grip-toggle { left: 0; transform: none; }
+body.bottom-folded #statusbar { display: none; }
+body.rail-off .progress-bar { left: 27px; }
+body.bottom-folded .progress-bar { bottom: 12px; }
+body.top-folded #toasts { top: calc(30px * var(--top-zoom) + 8px); }
+
+/* The top bar folds down to the window buttons rather than disappearing: on a frameless
+   window it is the only place left to move or close the app from. */
+body.top-folded #titlebar { height: 30px; }
+body.top-folded #tbNav,
+body.top-folded .tb-help,
+body.top-folded .tb-search,
+body.top-folded .tb-account,
+body.top-folded .tb-spacer { display: none; }
+body.top-folded .tb-brand { margin-right: auto; }
+body.top-folded .tb-ctl { width: 40px; }
+
+/* while a grip is being dragged it holds the pointer capture, so the page must not also
+   try to select text under it */
+body.grip-dragging { user-select: none; }
+
+/* ============ Content scale on floating surfaces ============ */
+/* Overlays are fixed to the viewport, so the card inside them takes the content scale
+   rather than the overlay itself — scaling a full-screen box would push it off centre. */
+.modal-content,
+.confirm-box,
+.player-box,
+.lang-pick-box,
+.toast,
+.progress-info,
+.progress-track { zoom: var(--content-zoom); }
+
+/* Classic flat rail layout when 3D tilt is disabled */
+[data-card-style="flat"] .rail-item {
+  transform: none;
+  box-shadow: none;
+}
+[data-card-style="flat"] .rail-item:hover {
+  transform: translateX(2px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+[data-card-style="flat"] .rail-item.active {
+  transform: none;
+  box-shadow: inset 0 0 0 1px var(--primary);
+}
+

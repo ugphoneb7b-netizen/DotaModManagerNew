@@ -1,0 +1,161 @@
+# Unit tests for the parts that touch the player's game files: the search-path patch, the VPK
+# reader/writer, language-folder detection and the item schema. A regression in any of them is
+# invisible until someone's game stops working, so they run on every push.
+name: Tests
+
+on:
+  push:
+    branches:
+      - main
+      - v2
+  pull_request:
+  # The merge queue runs the suite again on top of the newest main before a change lands.
+  merge_group:
+  workflow_dispatch:
+
+# The token reads the repository and nothing more. A job that needs more asks for it itself.
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      # Node 24 for the test runner, not the 20 Electron bundles: the tests use zlib.crc32
+      # (Node 22+). Nothing under test/ or tools/ is packaged into the app - the build's file
+      # list is preload.js, src/, renderer/ - so this cannot drift into runtime code.
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
+        with:
+          node-version: 24
+
+      # This used to skip installing on the grounds that the modules under test were
+      # dependency-free. That stopped being true once the tests reached the installer and the
+      # toolchain, which pull in adm-zip, and every run since has failed on a missing module
+      # while a developer's machine passed because node_modules was already there.
+      - name: Install dependencies
+        run: npm ci
+
+      # The workflows, read the way GitHub reads them.
+      #
+      # test/workflows.test.js reads these files as text. On 2026-09-26 release.yml reached main
+      # with two lines at column zero inside a run block: every test passed, GitHub could not read
+      # the file, and the next tag would have started no release. actionlint parses each workflow,
+      # checks every expression, `needs` and output against the jobs that exist, and hands each run
+      # block to shellcheck, held to errors only: a script that cannot run, not a style note.
+      #
+      # A binary rather than an action, pinned by version and by the SHA-256 in the release's own
+      # checksums file, so a change upstream cannot run here without a pull request saying so.
+      - name: Check the workflows with actionlint
+        env:
+          ACTIONLINT_VERSION: '1.7.12'
+          ACTIONLINT_SHA256: 8aca8db96f1b94770f1b0d72b6dddcb1ebb8123cb3712530b08cc387b349a3d8
+          SHELLCHECK_OPTS: --severity=error
+        run: |
+          set -euo pipefail
+          curl -fsSL --retry 3 -o actionlint.tar.gz \
+            "https://github.com/rhysd/actionlint/releases/download/v${ACTIONLINT_VERSION}/actionlint_${ACTIONLINT_VERSION}_linux_amd64.tar.gz"
+          echo "${ACTIONLINT_SHA256}  actionlint.tar.gz" | sha256sum -c -
+          tar -xzf actionlint.tar.gz actionlint
+          ./actionlint -color
+
+      # A name that is not there is not something a test can see.
+      #
+      # Splitting registerIpc on 2026-09-06 moved a call into one file and left the function it
+      # called in another. Every test passed - the contract test reads these files as text, and
+      # the unit tests never load a module that needs Electron - and two releases shipped in
+      # which no mod could be installed at all. The same split left a second one in
+      # ipc-presets.js that nobody had hit yet.
+      #
+      # `no-undef` names both in under a second. It runs before the suite because when it fails
+      # there is no point reading anything below it.
+      # Coverage is a floor, not a target, and since 2026-09-16 it is two things rather than one.
+      # tools/coverage.mjs runs the suite and reads its lcov: the aggregate floor in
+      # .github/coverage-baseline.json is held on every platform, and the per-file lines are held
+      # per platform, from a map keyed by the operating system each was measured on. A platform
+      # with no measurement yet is held to the aggregate and says so; take one with the manual
+      # coverage-baseline job below. Raise a line by writing tests and running
+      # `node tools/coverage.mjs --update`; never lower one to make a run green.
+      #
+      # Per file, because an aggregate hides the thing worth catching: it read 76.10% on the day
+      # this changed, while src/presets-service.js sat at 13.8%, and a new module with no tests
+      # moves the aggregate by a fraction of a point.
+      #
+      # The figure differs by platform and the floor has to clear the lower one. src/steam.ts
+      # asks which operating system it is on and takes a different half of itself on each, so
+      # this runner reports 75.2 lines / 77.4 branches / 73.6 functions where a Windows machine
+      # reports 74.8 / 77.7 / 73.0 (measured 2026-09-10, both). A floor calibrated on one of
+      # them fails on the other, which is how this comment came to be written.
+      #
+      # Node only reports files a test loaded, so a module with no test at all is invisible
+      # here rather than counted as zero. Several modules are still in that position - the gate
+      # holds the line, it does not claim the line is where it should be.
+      #
+      # The floor moved down on 2026-09-10, from 76/81/74, and the reason is the opposite of the
+      # usual one. The contract test now registers all nine src/ipc-*.js modules and calls every
+      # handler, so those files are loaded and counted for the first time. They are large and
+      # thinly covered, and the aggregate fell about two points because code that was invisible
+      # became visible. Nothing stopped being tested. Raise this again by testing those handlers,
+      # not by hiding them.
+      #
+      # Both run as `npm run verify`, the command a person runs before pushing and the commit
+      # hook runs before committing: one gate everywhere, so a check cannot live in only one of
+      # them. On 2026-09-15 one did, and a commit that added and committed in one command walked
+      # straight past it.
+      - name: Lint, then the suite with its coverage floor
+        run: npm run verify
+
+  # The same suite on the operating system most of these users are actually on. Issue #5.
+  #
+  # A separate job rather than a matrix on the one above, because the branch ruleset requires a
+  # status check named exactly `test`, and a matrix renames it to `test (ubuntu-latest)`. The
+  # gate would then wait forever for a check that no longer exists.
+  #
+  # No coverage floor here on purpose. Coverage is a property of the suite, not of the machine
+  # running it, and the two platforms genuinely report different figures because src/steam.ts
+  # takes a different half of itself on each. One floor, enforced once, on the runner it was
+  # calibrated against. This job is here to catch what only breaks on Windows: a path separator,
+  # a case-insensitive filesystem, a locked file.
+  windows:
+    runs-on: windows-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
+        with:
+          node-version: 24
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run tests
+        run: npm test
+
+  # The per-file lines for this runner, measured when somebody asks for them.
+  #
+  # The ratchet holds each platform against its own numbers, so Linux needs a measurement of its
+  # own before CI can hold anything more than the aggregate floor. This takes one: run the
+  # workflow by hand, download the artifact, put its `linux` block into
+  # .github/coverage-baseline.json and commit it. Manual on purpose - a baseline that rewrote
+  # itself on every push would be a record of what the code does, not a line it has to clear.
+  coverage-baseline:
+    if: github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
+        with:
+          node-version: 24
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Measure this runner
+        run: node tools/coverage.mjs --update
+
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
+        with:
+          name: coverage-baseline
+          path: .github/coverage-baseline.json
