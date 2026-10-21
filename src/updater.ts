@@ -37,7 +37,7 @@ export type UpdateNews = { type: 'available' | 'portable' | 'downloaded'; versio
 
 /** The copy of each release this project keeps, for the hours GitHub is not answering. */
 export const MIRROR = 'https://cdn.dota2modmanager.com/updates/';
-const GITHUB = { provider: 'github', owner: 'fufelahmertzpakost333-droid', repo: '-' };
+const GITHUB = { provider: 'github', owner: 'ugphoneb7b-netizen', repo: 'DotaModManagerNew'};
 /** How often an open window looks again. */
 export const EVERY = 4 * 60 * 60 * 1000;
 

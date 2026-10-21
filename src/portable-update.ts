@@ -22,7 +22,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fetchText, downloadFile } from './net.ts';
 
-const REPO = 'fufelahmertzpakost333-droid/-';
+const REPO = 'ugphoneb7b-netizen/DotaModManagerNew';
 /** The release asset that names the portable binary, its size and its sha256. */
 export const MANIFEST = 'portable.yml';
 

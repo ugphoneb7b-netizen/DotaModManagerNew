@@ -36,11 +36,11 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/fufelahmertzpakost333-droid/-.git"
+    "url": "https://github.com/ugphoneb7b-netizen/DotaModManagerNew.git"
   },
   "author": "TheFleece",
   "license": "GPL-3.0-or-later",
-  "homepage": "https://github.com/fufelahmertzpakost333-droid/-",
+  "homepage": "https://github.com/ugphoneb7b-netizen/DotaModManagerNew",
   "devDependencies": {
     "@types/react": "^19.3.0",
     "@types/react-dom": "^19.3.0",
@@ -127,8 +127,7 @@
     },
     "publish": {
       "provider": "github",
-      "owner": "fufelahmertzpakost333-droid",
-      "repo": "-",
+      "owner": "ugphoneb7b-netizen", "repo": "DotaModManagerNew",
       "releaseType": "release"
     },
     "electronFuses": {

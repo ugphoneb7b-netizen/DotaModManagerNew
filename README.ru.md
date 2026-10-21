@@ -8,9 +8,9 @@
 </p>
 
 <p>
-  <a href="https://github.com/fufelahmertzpakost333-droid/-/releases/tag/rel">
-    <img src="https://img.shields.io/github/v/release/fufelahmertzpakost333-droid/-?style=for-the-badge&color=8b6ff0&label=%D0%A1%D0%BA%D0%B0%D1%87%D0%B0%D1%82%D1%8C%20(Release)&logo=github&logoColor=white" alt="Скачать последнюю версию"></a>
-  <a href="https://github.com/fufelahmertzpakost333-droid/-/releases/tag/beta">
+  <a href="https://github.com/ugphoneb7b-netizen/DotaModManagerNew/releases/tag/rel">
+    <img src="https://img.shields.io/github/v/release/ugphoneb7b-netizen/DotaModManagerNew?style=for-the-badge&color=8b6ff0&label=%D0%A1%D0%BA%D0%B0%D1%87%D0%B0%D1%82%D1%8C%20(Release)&logo=github&logoColor=white" alt="Скачать последнюю версию"></a>
+  <a href="https://github.com/ugphoneb7b-netizen/DotaModManagerNew/releases/tag/beta">
     <img src="https://img.shields.io/badge/Beta%20Updates-orange?style=for-the-badge&logo=github&logoColor=white" alt="Beta Updates"></a>
   <img src="https://img.shields.io/badge/Windows%20%7C%20Linux-211f26?style=for-the-badge&logo=windows&logoColor=d0bcff" alt="Windows и Linux">
 </p>
@@ -98,7 +98,7 @@
 
 ## Установка
 
-1. Скачай **[Dota 2 Mod Manager Setup (Release)](https://github.com/fufelahmertzpakost333-droid/-/releases/tag/rel)** или бета-версию **[Dota 2 Mod Manager (Beta)](https://github.com/fufelahmertzpakost333-droid/-/releases/tag/beta)**
+1. Скачай **[Dota 2 Mod Manager Setup (Release)](https://github.com/ugphoneb7b-netizen/DotaModManagerNew/releases/tag/rel)** или бета-версию **[Dota 2 Mod Manager (Beta)](https://github.com/ugphoneb7b-netizen/DotaModManagerNew/releases/tag/beta)**
 2. Запусти установщик или используй Portable версию без установки
 3. Путь к Доте найдётся сам. Никаких параметров запуска и правок свойств Steam
 
