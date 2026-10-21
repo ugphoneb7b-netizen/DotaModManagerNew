@@ -30,16 +30,29 @@
   aspect-ratio: 16 / 9;
   background: var(--surface-solid);
   transition: transform 0.3s var(--ease), border-color 0.25s, box-shadow 0.3s var(--ease);
-  box-shadow: 4px 10px 22px rgba(0, 0, 0, 0.38);
+  box-shadow: 4px 10px 22px rgba(0, 0, 0, 0.45);
   transform: perspective(1000px) rotateY(15deg) rotateX(0deg);
   transform-origin: center center;
   transform-style: preserve-3d;
   will-change: transform;
 }
+.cat-tile::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 1px;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.16) 0%, transparent 60%);
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+  z-index: 2;
+}
 .cat-tile:hover {
-  transform: perspective(1000px) rotateY(0deg) rotateX(0deg) translateY(-6px) scale(1.03);
-  border-color: var(--primary);
-  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.6), 0 0 28px color-mix(in srgb, var(--md-primary) 22%, transparent);
+  transform: perspective(1000px) rotateY(0deg) rotateX(0deg) translateY(-8px) scale(1.04);
+  border-color: color-mix(in srgb, var(--md-primary) 80%, transparent);
+  box-shadow: 0 20px 48px rgba(0, 0, 0, 0.7), 0 0 35px color-mix(in srgb, var(--md-primary) 35%, transparent);
   z-index: 5;
 }
 .cat-tile img, .cat-tile video {
@@ -352,7 +365,7 @@
   display: flex;
   flex-direction: column;
   position: relative;
-  box-shadow: 4px 10px 22px rgba(0, 0, 0, 0.38);
+  box-shadow: 4px 10px 24px rgba(0, 0, 0, 0.45);
   transform: perspective(1000px) rotateY(15deg) rotateX(0deg);
   transform-origin: center center;
   transform-style: preserve-3d;
@@ -365,17 +378,18 @@
   inset: 0;
   border-radius: inherit;
   padding: 1px;
-  background: linear-gradient(135deg, rgba(255, 255, 255, 0.12) 0%, transparent 60%);
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.16) 0%, transparent 60%);
   -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
   -webkit-mask-composite: xor;
   mask-composite: exclude;
   pointer-events: none;
+  z-index: 2;
 }
 .card:hover {
-  transform: perspective(1000px) rotateY(0deg) rotateX(0deg) translateY(-6px) scale(1.03);
-  border-color: color-mix(in srgb, var(--md-primary) 70%, transparent);
+  transform: perspective(1000px) rotateY(0deg) rotateX(0deg) translateY(-8px) scale(1.04);
+  border-color: color-mix(in srgb, var(--md-primary) 85%, transparent);
   background: var(--surface-hover);
-  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.6), 0 0 30px color-mix(in srgb, var(--md-primary) 24%, transparent);
+  box-shadow: 0 20px 48px rgba(0, 0, 0, 0.7), 0 0 35px color-mix(in srgb, var(--md-primary) 35%, transparent);
   z-index: 5;
 }
 .card-media {

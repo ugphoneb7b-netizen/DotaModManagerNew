@@ -25,10 +25,10 @@
   align-items: center;
   gap: 14px;
   padding: 0 0 0 16px;
-  background: color-mix(in srgb, var(--md-surface) 82%, transparent);
-  backdrop-filter: blur(24px) saturate(180%);
-  border-bottom: 1px solid var(--border);
-  box-shadow: 0 2px 14px rgba(0, 0, 0, 0.25);
+  background: color-mix(in srgb, var(--md-surface) 75%, transparent);
+  backdrop-filter: blur(28px) saturate(200%);
+  border-bottom: 1px solid color-mix(in srgb, var(--border) 70%, var(--primary-glow));
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.08);
   -webkit-app-region: drag;
 }
 #titlebar button, #titlebar input, #titlebar .tb-search { -webkit-app-region: no-drag; }
@@ -115,31 +115,31 @@
   color: var(--text-muted);
   font-size: 13.5px;
   font-weight: 600;
-  padding: 0 14px;
+  padding: 0 16px;
   height: 100%;
   display: inline-flex;
   align-items: center;
-  gap: 6px;
+  gap: 7px;
   transition: all 0.22s var(--ease);
 }
 .tb-tab:hover {
   color: var(--text);
-  background: rgba(255, 255, 255, 0.04);
+  background: rgba(255, 255, 255, 0.05);
 }
 .tb-tab.active {
-  color: var(--text);
-  background: linear-gradient(180deg, transparent 0%, color-mix(in srgb, var(--primary) 12%, transparent) 100%);
+  color: #fff;
+  background: linear-gradient(180deg, transparent 0%, color-mix(in srgb, var(--primary) 18%, transparent) 100%);
 }
 .tb-tab.active::after {
   content: '';
   position: absolute;
-  left: 8px;
-  right: 8px;
+  left: 6px;
+  right: 6px;
   bottom: 0;
   height: 3px;
   border-radius: 3px 3px 0 0;
   background: linear-gradient(90deg, var(--primary), var(--accent));
-  box-shadow: 0 -2px 14px var(--primary-glow), 0 0 8px var(--primary);
+  box-shadow: 0 -2px 14px var(--primary-glow), 0 0 10px var(--primary);
 }
 .tb-badge {
   font-size: 10.5px;
