@@ -261,6 +261,26 @@ export function LinerApp() {
               <span className="ms">skip_next</span>
             </button>
 
+            <button
+              className={`liner-ctrl-btn ${playerState.loopMode !== 'none' ? 'active' : ''}`}
+              onClick={() => musicPlayer.toggleLoop()}
+              title={
+                playerState.loopMode === 'one'
+                  ? 'Повтор текущего трека (бесконечно)'
+                  : playerState.loopMode === 'all'
+                  ? 'Повтор всего списка'
+                  : 'Без повтора'
+              }
+              style={{
+                color: playerState.loopMode !== 'none' ? 'var(--primary)' : undefined,
+                position: 'relative',
+              }}
+            >
+              <span className="ms">
+                {playerState.loopMode === 'one' ? 'repeat_one' : 'repeat'}
+              </span>
+            </button>
+
             <span className="liner-time-badge">{formatTime(playerState.duration)}</span>
           </div>
 

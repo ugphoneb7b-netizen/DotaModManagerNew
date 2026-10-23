@@ -20,6 +20,7 @@ export interface LinerOverlayState {
   currentTime: number;
   duration: number;
   volume: number;
+  loopMode?: string;
   theme?: string;
 }
 

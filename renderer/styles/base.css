@@ -14,7 +14,12 @@ body {
   font-weight: var(--weight-body);
   line-height: var(--leading-normal);
   color: var(--text);
-  background: linear-gradient(155deg, var(--bg-base) 0%, var(--bg-deep) 100%);
+  background: 
+    radial-gradient(ellipse 90% 60% at 10% -10%, rgba(138, 43, 226, 0.28) 0%, transparent 65%),
+    radial-gradient(ellipse 85% 55% at 90% 110%, rgba(30, 100, 255, 0.25) 0%, transparent 65%),
+    radial-gradient(ellipse 70% 50% at 50% 50%, rgba(106, 0, 255, 0.12) 0%, transparent 70%),
+    linear-gradient(145deg, var(--bg-base) 0%, var(--bg-deep) 100%);
+  background-attachment: fixed;
   overflow: hidden;
   -webkit-font-smoothing: antialiased;
 }

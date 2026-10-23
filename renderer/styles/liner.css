@@ -435,6 +435,15 @@ body.bottom-folded .liner-docked-player {
   background: var(--surface-hover);
 }
 
+.liner-ctrl-btn.active {
+  color: var(--primary);
+  background: color-mix(in srgb, var(--primary) 15%, transparent);
+}
+
+.liner-ctrl-btn.active:hover {
+  background: color-mix(in srgb, var(--primary) 25%, transparent);
+}
+
 .liner-ctrl-btn:active:not(:disabled) {
   transform: scale(0.92);
 }

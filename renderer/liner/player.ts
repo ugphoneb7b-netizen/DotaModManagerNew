@@ -3,6 +3,7 @@ import Hls from 'hls.js';
 import type { LinerTrack } from '../../src/ipc-liner.ts';
 
 export type PlaybackStatus = 'idle' | 'loading' | 'playing' | 'paused' | 'error';
+export type LoopMode = 'none' | 'all' | 'one';
 
 export interface PlayerState {
   status: PlaybackStatus;
@@ -13,6 +14,7 @@ export interface PlayerState {
   volume: number;
   queue: LinerTrack[];
   currentIndex: number;
+  loopMode: LoopMode;
   error?: string;
 }
 
@@ -38,6 +40,7 @@ class MusicPlayer {
       volume: 0.8,
       queue: [],
       currentIndex: -1,
+      loopMode: 'none',
     };
 
     this.audio.volume = this.state.volume;
@@ -68,6 +71,12 @@ class MusicPlayer {
     });
 
     this.audio.addEventListener('ended', () => {
+      // Loop single track indefinitely if loopMode is 'one'
+      if (this.state.loopMode === 'one' && this.state.currentTrack) {
+        this.seek(0);
+        this.audio.play().catch((err) => console.warn('Replay failed:', err));
+        return;
+      }
       // Auto-advance to next track in queue on track completion
       this.next();
     });
@@ -94,6 +103,7 @@ class MusicPlayer {
         if (action === 'togglePlay') this.togglePlay();
         else if (action === 'previousTrack') this.previous();
         else if (action === 'nextTrack') this.next();
+        else if (action === 'toggleLoop') this.toggleLoop();
       });
     }
   }
@@ -123,6 +133,7 @@ class MusicPlayer {
         currentTime: this.state.currentTime,
         duration: this.state.duration,
         volume: this.state.volume,
+        loopMode: this.state.loopMode,
         theme,
       });
     }
@@ -266,6 +277,15 @@ class MusicPlayer {
     this.audio.volume = clamped;
     this.notify();
     this.syncOverlay();
+  }
+
+  public toggleLoop(): LoopMode {
+    // Cycles between 'none' -> 'one' (repeat current track indefinitely) -> 'all' (repeat queue) -> 'none'
+    const nextMode: LoopMode = this.state.loopMode === 'none' ? 'one' : this.state.loopMode === 'one' ? 'all' : 'none';
+    this.state.loopMode = nextMode;
+    this.notify();
+    this.syncOverlay();
+    return nextMode;
   }
 }
 

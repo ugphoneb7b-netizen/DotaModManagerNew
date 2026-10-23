@@ -442,9 +442,8 @@ function ImageToGridModal({
   const [detail, setDetail] = useState(85);
   const [edgeBoost, setEdgeBoost] = useState(65);
   const [gamma, setGamma] = useState(50);
-  const [spacingX, setSpacingX] = useState(6.8);
-  const [spacingY, setSpacingY] = useState(10.8);
-  const [maxPoints, setMaxPoints] = useState(480);
+  const [spacingX, setSpacingX] = useState(3.6);
+  const [spacingY, setSpacingY] = useState(6.2);
   const [fill, setFill] = useState(94);
   const [dotCount, setDotCount] = useState(0);
   const [catCount, setCatCount] = useState(0);
@@ -464,7 +463,6 @@ function ImageToGridModal({
     sx = spacingX,
     sy = spacingY,
     fl = fill,
-    mp = maxPoints,
   ) => {
     try {
       const res = convertImageToGrid(img, {
@@ -479,15 +477,15 @@ function ImageToGridModal({
         spacingX: sx,
         spacingY: sy,
         fill: fl,
-        maxPoints: mp,
       });
       setGridConfig(res);
-      // Count non-space stroke/dot characters and categories
+      // Count dots and categories
       const cats = res?.configs?.[0]?.categories ?? [];
       setCatCount(cats.length);
       let dots = 0;
       for (const c of cats) {
-        for (const ch of c.category_name) if (ch !== ' ') dots++;
+        // Each character in category_name that is '.' counts as a dot
+        for (const ch of c.category_name) if (ch === '.') dots++;
       }
       setDotCount(dots);
     } catch { /* ignore */ }
@@ -513,7 +511,6 @@ function ImageToGridModal({
     const newSx = opts.spacingX ?? spacingX;
     const newSy = opts.spacingY ?? spacingY;
     const newFl = opts.fill ?? fill;
-    const newMp = opts.maxPoints ?? maxPoints;
     setContrast(newCnt);
     setBrightness(newBrg);
     setDetail(newDet);
@@ -522,9 +519,8 @@ function ImageToGridModal({
     setSpacingX(newSx);
     setSpacingY(newSy);
     setFill(newFl);
-    setMaxPoints(newMp);
     if (img) {
-      regenerate(img, gridTitle, p.method, invert, newCnt, newBrg, newDet, newEb, newGam, newSx, newSy, newFl, newMp);
+      regenerate(img, gridTitle, p.method, invert, newCnt, newBrg, newDet, newEb, newGam, newSx, newSy, newFl);
     }
   };
 
@@ -628,10 +624,10 @@ function ImageToGridModal({
               </div>
 
               {/* Stats bar */}
-              <div style={{ display: 'flex', gap: 16, padding: '6px 0', fontSize: 12, color: 'var(--text-muted)', flexWrap: 'wrap', alignItems: 'center' }}>
+              <div style={{ display: 'flex', gap: 16, padding: '6px 0', fontSize: 12, color: 'var(--text-muted)' }}>
                 <span><b>{L`Точек:`}</b> {dotCount.toLocaleString()}</span>
-                <span><b>{L`Категорий в Dota 2:`}</b> {catCount.toLocaleString()} <span style={{ color: catCount <= 200 ? 'var(--ok, #4ade80)' : 'var(--warn, #facc15)' }}>({catCount <= 200 ? L`Без лагов` : L`Много категорий`})</span></span>
-                <span><b>{L`Метод:`}</b> {method === 'halftone' ? L`Полутон` : method === 'contour' ? L`Контур` : L`Гибрид`}</span>
+                <span><b>{L`Категорий:`}</b> {catCount.toLocaleString()}</span>
+                <span><b>{L`Метод:`}</b> {method === 'halftone' ? 'Полутон' : method === 'contour' ? 'Контур' : 'Гибрид'}</span>
               </div>
 
               <div className="image-grid-controls">
@@ -643,7 +639,7 @@ function ImageToGridModal({
                     value={gridTitle}
                     onChange={(e) => {
                       setGridTitle(e.target.value);
-                      if (imgElement) debouncedRegenerate(imgElement, e.target.value, method, invert, contrast, brightness, detail, edgeBoost, gamma, spacingX, spacingY, fill, maxPoints);
+                      if (imgElement) debouncedRegenerate(imgElement, e.target.value, method, invert, contrast, brightness, detail, edgeBoost, gamma, spacingX, spacingY, fill);
                     }}
                     style={{ height: 28, fontSize: 13, flex: 1 }}
                   />
@@ -664,23 +660,6 @@ function ImageToGridModal({
                 </div>
 
                 <div className="image-grid-control-item">
-                  <span>{L`Лимит точек:`} {maxPoints}</span>
-                  <input
-                    type="range"
-                    min="200"
-                    max="800"
-                    step="25"
-                    value={maxPoints}
-                    onChange={(e) => {
-                      const v = Number(e.target.value);
-                      setMaxPoints(v);
-                      if (imgElement) debouncedRegenerate(imgElement, gridTitle, method, invert, contrast, brightness, detail, edgeBoost, gamma, spacingX, spacingY, fill, v);
-                    }}
-                    title={L`Оптимально для плавной игры без фризов в Dota 2: 350-500 точек`}
-                  />
-                </div>
-
-                <div className="image-grid-control-item">
                   <span>{L`Детализация:`} {detail}%</span>
                   <input
                     type="range"
@@ -690,7 +669,7 @@ function ImageToGridModal({
                     onChange={(e) => {
                       const v = Number(e.target.value);
                       setDetail(v);
-                      if (imgElement) debouncedRegenerate(imgElement, gridTitle, method, invert, contrast, brightness, v, edgeBoost, gamma, spacingX, spacingY, fill, maxPoints);
+                      if (imgElement) debouncedRegenerate(imgElement, gridTitle, method, invert, contrast, brightness, v, edgeBoost, gamma, spacingX, spacingY, fill);
                     }}
                     title={L`Количество тональных переходов`}
                   />
@@ -706,7 +685,7 @@ function ImageToGridModal({
                     onChange={(e) => {
                       const v = Number(e.target.value);
                       setEdgeBoost(v);
-                      if (imgElement) debouncedRegenerate(imgElement, gridTitle, method, invert, contrast, brightness, detail, v, gamma, spacingX, spacingY, fill, maxPoints);
+                      if (imgElement) debouncedRegenerate(imgElement, gridTitle, method, invert, contrast, brightness, detail, v, gamma, spacingX, spacingY, fill);
                     }}
                     title={L`Усиление контуров и мелких деталей`}
                   />
@@ -722,7 +701,7 @@ function ImageToGridModal({
                     onChange={(e) => {
                       const v = Number(e.target.value);
                       setContrast(v);
-                      if (imgElement) debouncedRegenerate(imgElement, gridTitle, method, invert, v, brightness, detail, edgeBoost, gamma, spacingX, spacingY, fill, maxPoints);
+                      if (imgElement) debouncedRegenerate(imgElement, gridTitle, method, invert, v, brightness, detail, edgeBoost, gamma, spacingX, spacingY, fill);
                     }}
                   />
                 </div>
@@ -737,7 +716,7 @@ function ImageToGridModal({
                     onChange={(e) => {
                       const v = Number(e.target.value);
                       setBrightness(v);
-                      if (imgElement) debouncedRegenerate(imgElement, gridTitle, method, invert, contrast, v, detail, edgeBoost, gamma, spacingX, spacingY, fill, maxPoints);
+                      if (imgElement) debouncedRegenerate(imgElement, gridTitle, method, invert, contrast, v, detail, edgeBoost, gamma, spacingX, spacingY, fill);
                     }}
                   />
                 </div>
@@ -752,7 +731,7 @@ function ImageToGridModal({
                     onChange={(e) => {
                       const v = Number(e.target.value);
                       setGamma(v);
-                      if (imgElement) debouncedRegenerate(imgElement, gridTitle, method, invert, contrast, brightness, detail, edgeBoost, v, spacingX, spacingY, fill, maxPoints);
+                      if (imgElement) debouncedRegenerate(imgElement, gridTitle, method, invert, contrast, brightness, detail, edgeBoost, v, spacingX, spacingY, fill);
                     }}
                     title={L`Тоновая кривая: <50 = темнее, >50 = светлее`}
                   />
@@ -768,7 +747,7 @@ function ImageToGridModal({
                     onChange={(e) => {
                       const v = Number(e.target.value);
                       setFill(v);
-                      if (imgElement) debouncedRegenerate(imgElement, gridTitle, method, invert, contrast, brightness, detail, edgeBoost, gamma, spacingX, spacingY, v, maxPoints);
+                      if (imgElement) debouncedRegenerate(imgElement, gridTitle, method, invert, contrast, brightness, detail, edgeBoost, gamma, spacingX, spacingY, v);
                     }}
                     title={L`Размер изображения на сетке`}
                   />
@@ -780,7 +759,7 @@ function ImageToGridModal({
                     checked={invert}
                     onChange={(e) => {
                       setInvert(e.target.checked);
-                      if (imgElement) debouncedRegenerate(imgElement, gridTitle, method, e.target.checked, contrast, brightness, detail, edgeBoost, gamma, spacingX, spacingY, fill, maxPoints);
+                      if (imgElement) debouncedRegenerate(imgElement, gridTitle, method, e.target.checked, contrast, brightness, detail, edgeBoost, gamma, spacingX, spacingY, fill);
                     }}
                   />
                   <span>{L`Инверсия`}</span>

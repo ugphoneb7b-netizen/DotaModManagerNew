@@ -204,6 +204,7 @@ export const CHANNEL_ARGS: Record<string, Check[]> = {
     currentTime: num(0, 1e9),
     duration: num(0, 1e9),
     volume: num(0, 1),
+    loopMode: optional(str(20)),
     theme: optional(str(50)),
   })],
   'liner:overlayGetState': [],

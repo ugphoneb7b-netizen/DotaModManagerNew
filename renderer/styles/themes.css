@@ -25,20 +25,20 @@
 
 :root,
 [data-theme='ursa'] {
-  --md-primary: #d0bcff;
-  --md-accent: #b190ff;
-  --md-on-primary: #220a32;
-  --md-primary-container: #4f378b;
-  --md-on-primary-container: #f4e7ff;
-  --md-secondary: #ccc2dc;
-  --md-surface: #141218;
-  --md-surface-low: #1d1b20;
-  --md-surface-container: #211f26;
-  --md-surface-high: #2b2930;
-  --md-surface-highest: #36343b;
-  --md-on-surface: #e6e0e9;
-  --md-on-surface-variant: #cac4d0;
-  --md-outline: #938f99;
+  --md-primary: #b388ff;
+  --md-accent: #3d84ff;
+  --md-on-primary: #12002b;
+  --md-primary-container: #5b22b0;
+  --md-on-primary-container: #eedcff;
+  --md-secondary: #8c9eff;
+  --md-surface: #0e0b16;
+  --md-surface-low: #151122;
+  --md-surface-container: #1c162b;
+  --md-surface-high: #241c38;
+  --md-surface-highest: #2e2446;
+  --md-on-surface: #f0e6ff;
+  --md-on-surface-variant: #c8bde0;
+  --md-outline: #7c729c;
   --md-error: #ffb4ab;
 }
 

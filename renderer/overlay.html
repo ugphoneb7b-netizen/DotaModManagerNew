@@ -292,6 +292,10 @@
           <svg viewBox="0 0 24 24"><path d="M6 18l8.5-6L6 6v12zM16 6v12h2V6h-2z"/></svg>
         </button>
 
+        <button id="btnLoop" class="btn" title="Зациклить трек">
+          <svg id="loopIcon" viewBox="0 0 24 24"><path d="M7 7h10v3l4-4-4-4v3H5v6h2V7zm10 10H7v-3l-4 4 4 4v-3h12v-6h-2v4z"/></svg>
+        </button>
+
         <div class="divider"></div>
 
         <button id="btnClose" class="btn close-btn" title="Скрыть оверлей">
@@ -303,7 +307,7 @@
 
   <script>
     const THEMES = {
-      ursa: { primary: '#d0bcff', onPrimary: '#220a32', accent: '#b190ff' },
+      ursa: { primary: '#b388ff', onPrimary: '#12002b', accent: '#3d84ff' },
       brew: { primary: '#fac898', onPrimary: '#3a1f00', accent: '#f8b774' },
       fura: { primary: '#b1f9a4', onPrimary: '#00390e', accent: '#9bf38a' },
       storm: { primary: '#c7dbf0', onPrimary: '#10283e', accent: '#b5d0ec' },
@@ -332,6 +336,8 @@
     const playIcon = document.getElementById('playIcon');
     const btnPrev = document.getElementById('btnPrev');
     const btnNext = document.getElementById('btnNext');
+    const btnLoop = document.getElementById('btnLoop');
+    const loopIcon = document.getElementById('loopIcon');
     const btnClose = document.getElementById('btnClose');
 
     let currentCoverUrl = null;
@@ -377,6 +383,22 @@
         playIcon.innerHTML = '<path d="M8 5v14l11-7z"/>';
         btnPlay.title = 'Воспроизведение';
       }
+
+      if (btnLoop && loopIcon) {
+        if (state.loopMode === 'one') {
+          btnLoop.style.color = 'var(--primary)';
+          btnLoop.title = 'Повтор одного трека (бесконечно)';
+          loopIcon.innerHTML = '<path d="M7 7h10v3l4-4-4-4v3H5v6h2V7zm10 10H7v-3l-4 4 4 4v-3h12v-6h-2v4zm-4-2V9h-1l-2 1v1h1.5v4H13z"/>';
+        } else if (state.loopMode === 'all') {
+          btnLoop.style.color = 'var(--primary)';
+          btnLoop.title = 'Повтор очереди';
+          loopIcon.innerHTML = '<path d="M7 7h10v3l4-4-4-4v3H5v6h2V7zm10 10H7v-3l-4 4 4 4v-3h12v-6h-2v4z"/>';
+        } else {
+          btnLoop.style.color = 'rgba(255, 255, 255, 0.4)';
+          btnLoop.title = 'Без повтора';
+          loopIcon.innerHTML = '<path d="M7 7h10v3l4-4-4-4v3H5v6h2V7zm10 10H7v-3l-4 4 4 4v-3h12v-6h-2v4z"/>';
+        }
+      }
     }
 
     coverImg.addEventListener('error', () => {
@@ -419,6 +441,15 @@
         e.stopPropagation();
         api.sendAction('nextTrack');
       });
+
+      if (btnLoop) {
+        btnLoop.addEventListener('mousedown', (e) => e.stopPropagation());
+        btnLoop.addEventListener('click', (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          api.sendAction('toggleLoop');
+        });
+      }
 
       btnClose.addEventListener('mousedown', (e) => e.stopPropagation());
       btnClose.addEventListener('click', (e) => {
