@@ -1,11 +1,11 @@
 /* The Liner screen: React component for music player UI with rounded interface, slider and navigation arrows. */
-import { useState, useEffect, useRef } from 'react';
+import { useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import { pane } from '../core/router.ts';
 
 export interface LinerModel {
   key: number;
-  currentTrack: { title: string; artist: string; coverUrl?: string; duration?: number } | null;
+  currentTrack: { title: string; artist: string; coverUrl?: string; duration?: number };
   isPlaying: boolean;
   progress: number;
   volume: number;
@@ -35,16 +35,6 @@ function LinerScreen({ model, actions }: { model: LinerModel; actions: LinerActi
   const [isPlaying, setIsPlaying] = useState(model.isPlaying);
   const [progress, setProgress] = useState(model.progress);
   const [volume, setVolume] = useState(model.volume);
-  const [showPlayer, setShowPlayer] = useState(false);
-  const [isDragging, setIsDragging] = useState(false);
-  const progressRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    // Show player when music starts
-    if (model.currentTrack) {
-      setShowPlayer(true);
-    }
-  }, [model.currentTrack]);
 
   const handlePlayPause = async () => {
     await actions.playPause();
@@ -83,17 +73,6 @@ function LinerScreen({ model, actions }: { model: LinerModel; actions: LinerActi
   const totalTime = model.currentTrack?.duration
     ? formatTime(model.currentTrack.duration)
     : '0:00';
-
-  if (!showPlayer) {
-    return (
-      <div className="liner-container">
-        <div className="liner-empty">
-          <span className="ms">music_note</span>
-          <p>Выберите трек для воспроизведения</p>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="liner-container">
