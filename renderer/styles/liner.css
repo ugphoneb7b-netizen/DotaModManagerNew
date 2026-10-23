@@ -274,6 +274,53 @@
   margin-top: 2px;
 }
 
+
+.liner-card-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+  margin-left: auto;
+}
+
+.liner-card-action-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: var(--radius-xs, 6px);
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: all 0.2s var(--ease);
+  padding: 0;
+  flex-shrink: 0;
+}
+
+.liner-card-action-btn:hover {
+  background: color-mix(in srgb, var(--primary) 15%, var(--surface));
+  border-color: var(--primary);
+  color: var(--primary);
+  transform: scale(1.08);
+}
+
+.liner-card-action-btn:active {
+  transform: scale(0.95);
+}
+
+.liner-card-action-btn.delete:hover {
+  background: rgba(255, 68, 68, 0.15);
+  border-color: #ff5555;
+  color: #ff5555;
+}
+
+.liner-card-action-btn .ms {
+  font-size: 16px;
+  line-height: 1;
+}
+
 .liner-card-duration {
   font-size: 11px;
   color: var(--text-faint);
