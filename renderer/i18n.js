@@ -95,7 +95,7 @@ const EN = {
 
   // ---------- nav / chrome (index.html static) ----------
   'Каталог': 'Catalog', 'Библиотека': 'Library', 'Пресеты': 'Presets',
-  'Инструменты': 'Tools', 'Настройки': 'Settings',
+  'Инструменты': 'Tools', 'Настройки': 'Settings', 'Liner': 'Liner',
 
   // ---------- safe mode (status bar switch) ----------
   'Безопасно:': 'Safe:',

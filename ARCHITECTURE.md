@@ -47,9 +47,9 @@ Anything a user can do to a mod touches four files, in this order:
 
 Miss the second and the button exists but does nothing; miss the third and TypeScript refuses the
 call. `test/ipc-contract.test.js` and `test/api-types.test.js` hold the four together. The renderer is split by view
-(`catalog.ts`, `library.ts`, `presets.ts` and `settings.ts`, the larger ones with their parts in a
+(`catalog.ts`, `grids.ts`, `liner.ts`, `library.ts`, `presets.ts` and `settings.ts`, the larger ones with their parts in a
 folder of the same name) with shared pieces under `renderer/ui/`. Each draws with React components
-from the folder of its name under `renderer/`: `catalog/`, `library/`, `presets/`, `settings/`.
+from the folder of its name under `renderer/`: `catalog/`, `grids/`, `liner/`, `library/`, `presets/`, `settings/`.
 
 ## Where mods end up
 
@@ -567,7 +567,7 @@ that location is not writable.
 | `src/i18n.ts`, `src/i18n-zh-CN.ts`, `renderer/i18n.js`, `renderer/locales/*` | Russian, English and Simplified Chinese, for the main process and the window |
 | `renderer/app.ts`, `renderer/shell/*` | The window's start, and its own elements every screen reaches: the title bar, search, the switches, progress, drops, updates |
 | `renderer/api/*` | What every channel the window calls takes and answers |
-| `renderer/catalog/*`, `renderer/grids/*`, `renderer/library/*`, `renderer/presets/*`, `renderer/settings/*` | The five screens, in React |
+| `renderer/catalog/*`, `renderer/grids/*`, `renderer/liner/*`, `renderer/library/*`, `renderer/presets/*`, `renderer/settings/*` | The six screens, in React |
 | `renderer/views/*` | What each screen reads and does around its components |
 | `renderer/ui/*` | Dialogs, toasts, the media player, the install queue, shared chrome, and the focus and names a keyboard and a screen reader need (`a11y.ts`) |
 | `renderer/core/*` | What the screens share: the store, the router, the records, the categories, the 18+ question |
