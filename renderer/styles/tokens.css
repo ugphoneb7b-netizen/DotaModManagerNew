@@ -42,8 +42,8 @@
   --primary-soft: var(--md-primary);
   --primary-glow: color-mix(in srgb, var(--md-primary) 30%, transparent);
   --primary-dim: color-mix(in srgb, var(--md-primary) 16%, transparent);
-  --accent: var(--md-error);
-  --accent-glow: color-mix(in srgb, var(--md-error) 28%, transparent);
+  --accent: var(--md-accent, var(--md-error));
+  --accent-glow: color-mix(in srgb, var(--accent) 28%, transparent);
 
   --text: var(--md-on-surface);
   --text-muted: var(--md-on-surface-variant);

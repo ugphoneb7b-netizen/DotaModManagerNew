@@ -34,6 +34,7 @@ function applyTheme(name: unknown): string {
 
 export function initTheme(): void {
   applyTheme(state.settings?.theme);
+  musicPlayer.syncOverlay();
   const mascot = document.querySelector<HTMLElement>('#themeMascot');
   if (!mascot) return;
   mascot.addEventListener('click', () => {

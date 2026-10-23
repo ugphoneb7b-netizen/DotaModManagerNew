@@ -44,10 +44,10 @@
       width: 100%;
       height: 52px;
       border-radius: 12px;
-      background: rgba(18, 18, 22, 0.92);
+      background: color-mix(in srgb, var(--surface) 92%, #000);
       backdrop-filter: blur(24px);
       -webkit-backdrop-filter: blur(24px);
-      border: 1px solid rgba(255, 255, 255, 0.10);
+      border: 1px solid color-mix(in srgb, var(--primary) 22%, rgba(255, 255, 255, 0.10));
       box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(255, 255, 255, 0.05);
       display: flex;
       align-items: center;
@@ -307,14 +307,14 @@
 
   <script>
     const THEMES = {
-      ursa: { primary: '#b388ff', onPrimary: '#12002b', accent: '#3d84ff' },
-      brew: { primary: '#fac898', onPrimary: '#3a1f00', accent: '#f8b774' },
-      fura: { primary: '#b1f9a4', onPrimary: '#00390e', accent: '#9bf38a' },
-      storm: { primary: '#c7dbf0', onPrimary: '#10283e', accent: '#b5d0ec' },
-      invoker: { primary: '#ffffff', onPrimary: '#000000', accent: '#e0e0e0' },
-      meepo: { primary: '#ffb0c8', onPrimary: '#5e0029', accent: '#ff8fb3' },
-      bh: { primary: '#f1d783', onPrimary: '#3a2e00', accent: '#ebcc6d' },
-      axe: { primary: '#ffb4a9', onPrimary: '#680003', accent: '#ff897a' },
+      ursa: { primary: '#b388ff', onPrimary: '#12002b', accent: '#3d84ff', surface: '#0e0b16', surfaceContainer: '#1c162b' },
+      brew: { primary: '#fac898', onPrimary: '#3a1f00', accent: '#f8b774', surface: '#14110f', surfaceContainer: '#262421' },
+      fura: { primary: '#b1f9a4', onPrimary: '#00390e', accent: '#9bf38a', surface: '#121511', surfaceContainer: '#1e221d' },
+      storm: { primary: '#c7dbf0', onPrimary: '#10283e', accent: '#b5d0ec', surface: '#13171a', surfaceContainer: '#1f2428' },
+      invoker: { primary: '#ffffff', onPrimary: '#000000', accent: '#e0e0e0', surface: '#0e0e0e', surfaceContainer: '#1e1e1e' },
+      meepo: { primary: '#ffb0c8', onPrimary: '#5e0029', accent: '#ff8fb3', surface: '#191113', surfaceContainer: '#272023' },
+      bh: { primary: '#f1d783', onPrimary: '#3a2e00', accent: '#ebcc6d', surface: '#15130f', surfaceContainer: '#242220' },
+      axe: { primary: '#ffb4a9', onPrimary: '#680003', accent: '#ff897a', surface: '#1a1110', surfaceContainer: '#28201d' },
     };
 
     function applyTheme(themeName) {
@@ -323,6 +323,8 @@
       root.style.setProperty('--primary', p.primary);
       root.style.setProperty('--on-primary', p.onPrimary);
       root.style.setProperty('--accent', p.accent);
+      root.style.setProperty('--surface', p.surface);
+      root.style.setProperty('--surface-container', p.surfaceContainer);
     }
 
     const api = window.overlayApi;
