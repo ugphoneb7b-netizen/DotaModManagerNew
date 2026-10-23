@@ -39,12 +39,13 @@ for (const file of sourceFiles('src')) {
   for (const m of read(file).matchAll(/ipcMain\.(?:handle|on)\('([^']+)'/g)) registered.add(m[1]);
 }
 const sent = new Set<string>();
-for (const file of ['preload.js', 'preload-uninstall.js']) {
+for (const file of ['preload.js', 'preload-uninstall.js', 'preload-overlay.js']) {
   for (const m of read(file).matchAll(/ipcRenderer\.(?:invoke|send)\('([^']+)'/g)) sent.add(m[1]);
 }
 
 const PAGE = pathToFileURL(path.join(ROOT, 'out', 'renderer', 'index.html')).href;
 const REMOVAL = pathToFileURL(path.join(ROOT, 'renderer', 'uninstall.html')).href;
+const OVERLAY = pathToFileURL(path.join(ROOT, 'renderer', 'overlay.html')).href;
 const top = (url: string) => ({ senderFrame: { url, parent: null } });
 
 test('every channel the app registers has an argument check, and the registry names no other', () => {
@@ -183,6 +184,28 @@ const VALID: Record<string, unknown[][]> = {
   'misc:openExternal': [['https://dota2modmanager.com/docs/'], ['http://example.org'], [undefined]],
   'misc:cacheSize': [[]], 'misc:clearCache': [[]], 'misc:runTool': [['Compiler']],
   'diag:export': [[]], 'diag:rendererError': [['TypeError: x is undefined']],
+  'liner:search': [['Linkin Park'], ['']],
+  'liner:resolveStream': [['sc:12345']],
+  'liner:overlayToggle': [[]],
+  'liner:overlayShow': [[]],
+  'liner:overlayHide': [[]],
+  'liner:overlayUpdateState': [[{
+    isPlaying: true,
+    track: { id: 'sc:1', title: 'Test', artist: 'Artist', durationMs: 180000, coverUrl: 'http://example.com/cover.jpg' },
+    progress: 0.5,
+    currentTime: 90,
+    duration: 180,
+    volume: 0.8,
+  }], [{
+    isPlaying: false,
+    track: null,
+    progress: 0,
+    currentTime: 0,
+    duration: 0,
+    volume: 0.8,
+  }]],
+  'liner:overlayGetState': [[]],
+  'liner:overlayAction': [['togglePlay'], ['previousTrack', 'payload']],
   'uninstall:plan': [[]], 'uninstall:run': [[{ revert: true, mods: false, data: false }], [{ revert: true, mods: true, data: true }], [null]], 'uninstall:done': [[true]], 'uninstall:cancel': [[]],
 };
 
@@ -314,7 +337,7 @@ test('every window the app opens isolates its page and runs it in the sandbox', 
       assert.doesNotMatch(block, /webSecurity: false|webviewTag: true|allowRunningInsecureContent: true|nodeIntegrationInSubFrames: true/, file);
     }
   }
-  assert.equal(windows, 2, 'the main window and the removal window');
+  assert.equal(windows, 3, 'the main window, the removal window and the overlay window');
 });
 
 test('the guard is in place before any channel is registered or any window opened', () => {
@@ -347,7 +370,7 @@ test('put up whole, the guard wraps the channels, answers permissions and locks 
   assert.equal(locked, 3);
   assert.equal(guard.refuse(top(PAGE)), null, 'a packaged app has the built page');
   assert.match(String(guard.refuse(top('http://localhost:5173/'))), /not the app's/, 'and never the dev server');
-  assert.deepEqual(appPages({ appRoot: ROOT, isPackaged: false, devUrl: 'http://localhost:5173/' }), ['http://localhost:5173/', REMOVAL]);
+  assert.deepEqual(appPages({ appRoot: ROOT, isPackaged: false, devUrl: 'http://localhost:5173/' }), ['http://localhost:5173/', REMOVAL, OVERLAY]);
 });
 
 test('a tool folder opens only when the library installed it, and the browser gets web addresses only', async () => {

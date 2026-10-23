@@ -11,6 +11,7 @@
 import { state } from '../core/store.ts';
 import { RAW_BASE } from '../core/constants.ts';
 import { tokenMs } from '../core/css-time.ts';
+import { musicPlayer } from '../liner/player.ts';
 
 const THEMES = ['ursa', 'brew', 'fura', 'storm', 'invoker', 'meepo', 'bh', 'axe'];
 
@@ -50,6 +51,7 @@ export function initTheme(): void {
       swapped = true;
       applyTheme(next);
       window.api.settings.set('theme', next);
+      musicPlayer.syncOverlay();
     };
 
     /* The spin has to end on a clock, not only on its own event.

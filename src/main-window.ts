@@ -134,6 +134,9 @@ export function createMainWindow({ appRoot, settings, diag, workArea = null, qui
 
   win.on('maximize', () => win.webContents.send('win:maximized', true));
   win.on('unmaximize', () => win.webContents.send('win:maximized', false));
+  win.on('closed', () => {
+    app.quit();
+  });
 
   // Ctrl +/-/0 scale the content. Handled here rather than in the renderer because
   // preventDefault() at this point also swallows Electron's built-in zoom accelerators, which

@@ -26,13 +26,14 @@ import * as packs from '../src/ipc-packs.ts';
 import * as presets from '../src/ipc-presets.ts';
 import * as settings from '../src/ipc-settings.ts';
 import * as windowIpc from '../src/ipc-window.ts';
+import * as liner from '../src/ipc-liner.ts';
 import { registerAgainst } from './helpers/fake-electron.ts';
 
 const ROOT = path.resolve(import.meta.dirname, '..');
 
 const MODULES: Record<string, Record<string, unknown>> = {
   'ipc-diagnostics.ts': diagnostics, 'ipc-foreign.ts': foreign, 'ipc-game.ts': game, 'ipc-grids.ts': grids, 'ipc-library.ts': library,
-  'ipc-misc.ts': misc, 'ipc-mods.ts': mods, 'ipc-packs.ts': packs,
+  'ipc-liner.ts': liner, 'ipc-misc.ts': misc, 'ipc-mods.ts': mods, 'ipc-packs.ts': packs,
   'ipc-presets.ts': presets, 'ipc-settings.ts': settings, 'ipc-window.ts': windowIpc,
 };
 
@@ -60,7 +61,7 @@ test('every handler runs far enough to prove its own names exist', async () => {
   const ctx = new Proxy({}, { get: () => () => undefined, has: () => true });
   const notDefined: string[] = [];
   for (const [file, mod] of Object.entries(MODULES)) {
-    const register = Object.values(mod).find((v) => typeof v === 'function') as ((c: unknown) => void) | undefined;
+    const register = (mod.registerLinerIpc || Object.values(mod).find((v) => typeof v === 'function')) as ((c: unknown) => void) | undefined;
     assert.ok(register, `${file} exports no register function`);
     const channels = registerAgainst(() => register(ctx), electron);
     assert.ok(channels.size > 0, `${file} registered nothing`);

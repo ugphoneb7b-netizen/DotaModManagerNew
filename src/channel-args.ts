@@ -185,6 +185,29 @@ export const CHANNEL_ARGS: Record<string, Check[]> = {
   // diagnostics (src/ipc-diagnostics.ts)
   // the handler keeps the first 2000 characters: a long error is cut there, not refused here
   'diag:export': [], 'diag:rendererError': [str(4 * MB)],
+  // liner music player (src/ipc-liner.ts)
+  'liner:search': [str(1000), optional(num(0, 10000))],
+  'liner:resolveStream': [str(200, 1)],
+  'liner:overlayToggle': [],
+  'liner:overlayShow': [],
+  'liner:overlayHide': [],
+  'liner:overlayUpdateState': [shape({
+    isPlaying: bool,
+    track: optional(either(shape({
+      id: str(200, 1),
+      title: str(1000),
+      artist: str(1000),
+      durationMs: num(0, 1e9),
+      coverUrl: optional(str(4096)),
+    }), (v) => (v === null ? null : fail('null or track object')))),
+    progress: num(0, 1),
+    currentTime: num(0, 1e9),
+    duration: num(0, 1e9),
+    volume: num(0, 1),
+    theme: optional(str(50)),
+  })],
+  'liner:overlayGetState': [],
+  'liner:overlayAction': [str(100, 1), optional(str(1000))],
   // the removal window (src/uninstall-window.ts)
   // the window sends all three boxes (renderer/uninstall.js); the uninstaller acts on data itself
   'uninstall:plan': [], 'uninstall:run': [optional(shape({ revert: optional(bool), mods: optional(bool), data: optional(bool) }))],

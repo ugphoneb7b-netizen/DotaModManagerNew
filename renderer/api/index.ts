@@ -8,6 +8,7 @@ import type { AppApi } from './app.ts';
 import type { ArcanaApi, CatalogApi, ConfigApi, CosmeticsApi, PatchApi, PresetsApi, PreviewApi, ToolsApi } from './content.ts';
 import type { ModsApi, PacksApi } from './mods.ts';
 import type { GridsApi } from './grids.ts';
+import type { LinerApi } from './liner.ts';
 
 export interface Api extends AppApi {
   catalog: CatalogApi;
@@ -25,4 +26,5 @@ export interface Api extends AppApi {
   packs: PacksApi;
   presets: PresetsApi;
   grids: GridsApi;
+  liner: LinerApi;
 }

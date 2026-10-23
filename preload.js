@@ -172,4 +172,15 @@ contextBridge.exposeInMainWorld('api', {
     notesSeen: () => ipcRenderer.invoke('app:notesSeen'),
     onUpdate: (cb) => ipcRenderer.on('update', (e, evt) => cb(evt)),
   },
+  liner: {
+    search: (query, offset) => ipcRenderer.invoke('liner:search', query, offset),
+    resolveStream: (trackId) => ipcRenderer.invoke('liner:resolveStream', trackId),
+    overlayToggle: () => ipcRenderer.invoke('liner:overlayToggle'),
+    overlayShow: () => ipcRenderer.invoke('liner:overlayShow'),
+    overlayHide: () => ipcRenderer.invoke('liner:overlayHide'),
+    overlayUpdateState: (state) => ipcRenderer.invoke('liner:overlayUpdateState', state),
+    overlayGetState: () => ipcRenderer.invoke('liner:overlayGetState'),
+    sendOverlayAction: (action, payload) => ipcRenderer.send('liner:overlayAction', action, payload),
+    onOverlayAction: (cb) => ipcRenderer.on('liner:action', (e, action, payload) => cb(action, payload)),
+  },
 });

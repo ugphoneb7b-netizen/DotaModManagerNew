@@ -129,6 +129,7 @@ export function appPages({ appRoot, isPackaged, devUrl }: { appRoot: string; isP
   return [
     appPage({ root: appRoot, isPackaged, devUrl }).url,
     pathToFileURL(path.join(appRoot, 'renderer', 'uninstall.html')).href,
+    pathToFileURL(path.join(appRoot, 'renderer', 'overlay.html')).href,
   ];
 }
 

@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <title>Liner Overlay</title>
+  <style>
+    :root {
+      --primary: #d0bcff;
+      --on-primary: #220a32;
+      --accent: #b190ff;
+      --surface: #141218;
+      --surface-container: #211f26;
+      --surface-high: #2b2930;
+      --border: rgba(255, 255, 255, 0.12);
+      --text: #ffffff;
+      --text-muted: rgba(255, 255, 255, 0.55);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+
+    html, body {
+      width: 100vw;
+      height: 100vh;
+      overflow: hidden;
+      background: transparent;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+
+    body {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 4px;
+    }
+
+    /* Main floating card - Discord / Liner overlay aesthetic */
+    .overlay-card {
+      width: 100%;
+      height: 52px;
+      border-radius: 12px;
+      background: rgba(18, 18, 22, 0.92);
+      backdrop-filter: blur(24px);
+      -webkit-backdrop-filter: blur(24px);
+      border: 1px solid rgba(255, 255, 255, 0.10);
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(255, 255, 255, 0.05);
+      display: flex;
+      align-items: center;
+      position: relative;
+      overflow: hidden;
+      cursor: grab;
+      -webkit-app-region: drag;
+      transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .overlay-card:active {
+      cursor: grabbing;
+    }
+
+    .overlay-card:hover {
+      border-color: color-mix(in srgb, var(--primary) 35%, rgba(255, 255, 255, 0.15));
+      box-shadow: 0 10px 28px rgba(0, 0, 0, 0.7), 0 0 14px color-mix(in srgb, var(--primary) 15%, transparent);
+    }
+
+    /* Smooth progress bar underlay */
+    .progress-bar-fill {
+      position: absolute;
+      left: 0;
+      top: 0;
+      bottom: 0;
+      width: 0%;
+      background: linear-gradient(90deg, color-mix(in srgb, var(--primary) 20%, transparent), color-mix(in srgb, var(--accent) 15%, transparent));
+      pointer-events: none;
+      transition: width 0.15s linear;
+      z-index: 1;
+    }
+
+    /* Bottom subtle line accent for progress */
+    .progress-line {
+      position: absolute;
+      left: 0;
+      bottom: 0;
+      height: 2px;
+      width: 0%;
+      background: var(--primary);
+      box-shadow: 0 0 6px var(--primary);
+      pointer-events: none;
+      transition: width 0.15s linear;
+      z-index: 2;
+    }
+
+    /* Layout content */
+    .content-wrap {
+      position: relative;
+      z-index: 3;
+      display: flex;
+      align-items: center;
+      width: 100%;
+      height: 100%;
+      padding: 0 8px 0 10px;
+      gap: 10px;
+    }
+
+    /* Cover artwork */
+    .cover-wrap {
+      width: 36px;
+      height: 36px;
+      border-radius: 8px;
+      background: #1c1a22;
+      flex-shrink: 0;
+      position: relative;
+      overflow: hidden;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .cover-img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: none;
+    }
+
+    .cover-fallback {
+      font-size: 15px;
+      color: var(--primary);
+      opacity: 0.6;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    /* Metadata */
+    .meta-wrap {
+      flex: 1;
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      gap: 2px;
+    }
+
+    .title-row {
+      font-size: 12.5px;
+      font-weight: 600;
+      color: #ffffff;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      line-height: 15px;
+      letter-spacing: -0.01em;
+    }
+
+    .artist-row {
+      font-size: 11px;
+      color: var(--text-muted);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      line-height: 13px;
+    }
+
+    /* Action buttons */
+    .controls-wrap {
+      display: flex;
+      align-items: center;
+      gap: 3px;
+      flex-shrink: 0;
+      -webkit-app-region: no-drag !important;
+    }
+
+    .btn {
+      background: transparent;
+      border: none;
+      outline: none;
+      cursor: pointer;
+      color: rgba(255, 255, 255, 0.7);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 26px;
+      height: 26px;
+      border-radius: 6px;
+      transition: all 0.12s ease;
+      -webkit-app-region: no-drag !important;
+      position: relative;
+    }
+
+    .btn svg {
+      width: 15px;
+      height: 15px;
+      fill: currentColor;
+      pointer-events: none;
+    }
+
+    .btn:hover {
+      background: rgba(255, 255, 255, 0.12);
+      color: #ffffff;
+    }
+
+    .btn:active {
+      transform: scale(0.90);
+    }
+
+    .play-btn {
+      width: 30px;
+      height: 30px;
+      border-radius: 50%;
+      background: var(--primary);
+      color: var(--on-primary);
+      box-shadow: 0 2px 8px color-mix(in srgb, var(--primary) 40%, transparent);
+    }
+
+    .play-btn svg {
+      width: 16px;
+      height: 16px;
+      fill: currentColor;
+    }
+
+    .play-btn:hover {
+      background: #ffffff;
+      color: #000000;
+      transform: scale(1.06);
+      box-shadow: 0 3px 10px rgba(255, 255, 255, 0.35);
+    }
+
+    .play-btn:active {
+      transform: scale(0.94);
+    }
+
+    .divider {
+      width: 1px;
+      height: 18px;
+      background: rgba(255, 255, 255, 0.10);
+      margin: 0 2px;
+      -webkit-app-region: no-drag !important;
+    }
+
+    .close-btn {
+      width: 22px;
+      height: 22px;
+      color: rgba(255, 255, 255, 0.4);
+      border-radius: 5px;
+    }
+
+    .close-btn svg {
+      width: 13px;
+      height: 13px;
+    }
+
+    .close-btn:hover {
+      color: #ff6b6b;
+      background: rgba(255, 107, 107, 0.15);
+    }
+  </style>
+</head>
+<body>
+  <div class="overlay-card" id="card">
+    <div class="progress-bar-fill" id="progFill"></div>
+    <div class="progress-line" id="progLine"></div>
+    <div class="content-wrap">
+      <!-- Cover art -->
+      <div class="cover-wrap">
+        <img id="coverImg" class="cover-img" alt="" />
+        <span id="coverFallback" class="cover-fallback">♫</span>
+      </div>
+
+      <!-- Track details -->
+      <div class="meta-wrap">
+        <div class="title-row" id="trackTitle">Liner Player</div>
+        <div class="artist-row" id="trackArtist">Трек не выбран</div>
+      </div>
+
+      <!-- Controls -->
+      <div class="controls-wrap">
+        <button id="btnPrev" class="btn" title="Предыдущий трек">
+          <svg viewBox="0 0 24 24"><path d="M6 6h2v12H6zm3.5 6l8.5 6V6z"/></svg>
+        </button>
+
+        <button id="btnPlay" class="btn play-btn" title="Воспроизведение/Пауза">
+          <svg id="playIcon" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+        </button>
+
+        <button id="btnNext" class="btn" title="Следующий трек">
+          <svg viewBox="0 0 24 24"><path d="M6 18l8.5-6L6 6v12zM16 6v12h2V6h-2z"/></svg>
+        </button>
+
+        <div class="divider"></div>
+
+        <button id="btnClose" class="btn close-btn" title="Скрыть оверлей">
+          <svg viewBox="0 0 24 24"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const THEMES = {
+      ursa: { primary: '#d0bcff', onPrimary: '#220a32', accent: '#b190ff' },
+      brew: { primary: '#fac898', onPrimary: '#3a1f00', accent: '#f8b774' },
+      fura: { primary: '#b1f9a4', onPrimary: '#00390e', accent: '#9bf38a' },
+      storm: { primary: '#c7dbf0', onPrimary: '#10283e', accent: '#b5d0ec' },
+      invoker: { primary: '#ffffff', onPrimary: '#000000', accent: '#e0e0e0' },
+      meepo: { primary: '#ffb0c8', onPrimary: '#5e0029', accent: '#ff8fb3' },
+      bh: { primary: '#f1d783', onPrimary: '#3a2e00', accent: '#ebcc6d' },
+      axe: { primary: '#ffb4a9', onPrimary: '#680003', accent: '#ff897a' },
+    };
+
+    function applyTheme(themeName) {
+      const p = THEMES[themeName] || THEMES.ursa;
+      const root = document.documentElement;
+      root.style.setProperty('--primary', p.primary);
+      root.style.setProperty('--on-primary', p.onPrimary);
+      root.style.setProperty('--accent', p.accent);
+    }
+
+    const api = window.overlayApi;
+    const coverImg = document.getElementById('coverImg');
+    const coverFallback = document.getElementById('coverFallback');
+    const trackTitle = document.getElementById('trackTitle');
+    const trackArtist = document.getElementById('trackArtist');
+    const progFill = document.getElementById('progFill');
+    const progLine = document.getElementById('progLine');
+    const btnPlay = document.getElementById('btnPlay');
+    const playIcon = document.getElementById('playIcon');
+    const btnPrev = document.getElementById('btnPrev');
+    const btnNext = document.getElementById('btnNext');
+    const btnClose = document.getElementById('btnClose');
+
+    let currentCoverUrl = null;
+
+    function render(state) {
+      if (!state) return;
+
+      if (state.theme) {
+        applyTheme(state.theme);
+      }
+
+      if (state.track && state.track.title) {
+        trackTitle.textContent = state.track.title;
+        trackArtist.textContent = state.track.artist || 'Неизвестный исполнитель';
+
+        const cover = state.track.coverUrl || '';
+        if (cover && cover !== currentCoverUrl) {
+          currentCoverUrl = cover;
+          coverImg.src = cover;
+          coverImg.style.display = 'block';
+          coverFallback.style.display = 'none';
+        } else if (!cover) {
+          currentCoverUrl = null;
+          coverImg.style.display = 'none';
+          coverFallback.style.display = 'flex';
+        }
+      } else {
+        trackTitle.textContent = 'Liner Player';
+        trackArtist.textContent = 'Трек не выбран';
+        currentCoverUrl = null;
+        coverImg.style.display = 'none';
+        coverFallback.style.display = 'flex';
+      }
+
+      const pct = Math.max(0, Math.min(100, (state.progress || 0) * 100)).toFixed(1) + '%';
+      progFill.style.width = pct;
+      progLine.style.width = pct;
+
+      if (state.isPlaying) {
+        playIcon.innerHTML = '<path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/>';
+        btnPlay.title = 'Пауза';
+      } else {
+        playIcon.innerHTML = '<path d="M8 5v14l11-7z"/>';
+        btnPlay.title = 'Воспроизведение';
+      }
+    }
+
+    coverImg.addEventListener('error', () => {
+      coverImg.style.display = 'none';
+      coverFallback.style.display = 'flex';
+    });
+
+    if (api) {
+      // 1. Initial state request
+      api.getState().then(render).catch(console.error);
+
+      // 2. Continuous updates from main player
+      api.onState((state) => {
+        render(state);
+      });
+
+      // 3. Periodic fallback poll every 1s when active to guarantee sync
+      setInterval(() => {
+        api.getState().then(render).catch(() => {});
+      }, 1000);
+
+      // 4. Action bindings with immediate stopPropagation
+      btnPlay.addEventListener('mousedown', (e) => e.stopPropagation());
+      btnPlay.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        api.sendAction('togglePlay');
+      });
+
+      btnPrev.addEventListener('mousedown', (e) => e.stopPropagation());
+      btnPrev.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        api.sendAction('previousTrack');
+      });
+
+      btnNext.addEventListener('mousedown', (e) => e.stopPropagation());
+      btnNext.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        api.sendAction('nextTrack');
+      });
+
+      btnClose.addEventListener('mousedown', (e) => e.stopPropagation());
+      btnClose.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        api.hide().catch(console.error);
+      });
+    }
+  </script>
+</body>
+</html>

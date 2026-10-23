@@ -25,7 +25,9 @@ export function registerWindowIpc({
     else win().maximize();
     return win().isMaximized();
   });
-  ipcMain.handle('win:close', () => win().close());
+  ipcMain.handle('win:close', () => {
+    app.quit();
+  });
   ipcMain.handle('win:isMaximized', () => win().isMaximized());
 
   // ----- updates -----

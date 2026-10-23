@@ -34,6 +34,7 @@ import { isUninstallRun } from './uninstall-args.ts';
 import { createGate } from './feature-gate.ts';
 import { settingsViewFor } from './settings-view.ts';
 import { registerIpc } from './ipc.ts';
+import { closeOverlayWindow } from './ipc-liner.ts';
 import { guardTheApp } from './window-guard.ts';
 import { jailLogTo, jailRoots, jailThisRun } from './write-jail.ts';
 import { createAppLog } from './app-log.ts';
@@ -289,6 +290,7 @@ async function start(): Promise<void> {
   patchWatcher.start(settings.get('gameStamp'));
   const watcher = patchWatcher;
   app.on('before-quit', () => {
+    closeOverlayWindow();
     upkeep.stop();
     watcher.stop();
   });
