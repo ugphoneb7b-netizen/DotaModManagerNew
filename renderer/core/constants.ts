@@ -6,7 +6,7 @@
  * with the view that makes it. */
 import type { Filters } from '../catalog/types.ts';
 
-export const RAW_BASE = 'https://raw.githubusercontent.com/h6rd/Dota2PornFxWeb/main';
+export const RAW_BASE = 'https://raw.githubusercontent.com/ugphoneb7b-netizen/DotaModManagerNew/main';
 
 /* The same files, from a host that is not GitHub.
  *
