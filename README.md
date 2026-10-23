@@ -66,7 +66,7 @@
 ## What it does
 
 <table>
-<tr><td width="210"><b>The whole catalog</b></td><td>1000+ mods in 41 categories, read live from the <a href="https://github.com/h6rd/Dota2PornFxWeb">D2PFX</a> repository, so a mod added today installs today</td></tr>
+<tr><td width="210"><b>The whole catalog</b></td><td>1000+ mods in 41 categories, read live from the <a href="https://github.com/ugphoneb7b-netizen/DotaModManagerNew">D2PFX</a> repository, so a mod added today installs today</td></tr>
 <tr><td><b>One click in, one click out</b></td><td>The app downloads it, picks a free pak slot and cleans up after itself. Categories that must load early get low slots by themselves</td></tr>
 <tr><td><b>Switch off, don't delete</b></td><td>Turn a mod off before a match and back on after. Your library stays, the game folder stays clean</td></tr>
 <tr><td><b>Looks for the default items</b></td><td>Weather, couriers, wards, loading screens, announcers, mega-kills: the default item every account has is drawn as any other item in the game, on your screen and nobody else's. The list comes from the game's own item table, so anything Valve adds appears by itself</td></tr>
@@ -326,7 +326,7 @@ writing VPK archives is done by this repository's own code, which is why `src/vp
 ## Credits
 
 - **All mods, previews, guides and catalog data** come from the open-source
-  [**D2PFX**](https://github.com/h6rd/Dota2PornFxWeb) repository by [h6rd](https://github.com/h6rd)
+  [**D2PFX**](https://github.com/ugphoneb7b-netizen/DotaModManagerNew) repository by [ugphoneb7b-netizen](https://github.com/ugphoneb7b-netizen)
   and the Dota 2 modding community. This app is a desktop client for their catalog, and every mod
   card in it credits its author.
 - Community tools (VPKMerge, Background Changer, Compiler, ItemsFix) belong to their authors.
@@ -358,7 +358,7 @@ changed the code and when, and to open your version under the same license. Sect
 author add two more, and this repository does: keep the credit the app shows, and pick your own
 name for your version. [NOTICE](NOTICE) puts all of it in plain words.
 
-Catalog content belongs to [h6rd](https://github.com/h6rd/Dota2PornFxWeb) and the mod authors,
+Catalog content belongs to [ugphoneb7b-netizen](https://github.com/ugphoneb7b-netizen/DotaModManagerNew) and the mod authors,
 under the license in their repository.
 
 <div align="center">

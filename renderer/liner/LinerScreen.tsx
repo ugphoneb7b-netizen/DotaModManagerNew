@@ -115,10 +115,10 @@ export function LinerApp() {
         <button
           className={`liner-overlay-btn ${isOverlayOpen ? 'active' : ''}`}
           onClick={handleToggleOverlay}
-          title="Включить/выключить плавающий Discord-оверлей поверх всех окон"
+          title="Включить/выключить плавающий Liner Player поверх всех окон"
         >
           <span className="ms">picture_in_picture_alt</span>
-          <span>Оверлей (Discord)</span>
+          <span>Liner Player</span>
         </button>
       </div>
 

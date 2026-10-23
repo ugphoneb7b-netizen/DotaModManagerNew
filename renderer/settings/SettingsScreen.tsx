@@ -196,7 +196,7 @@ function SettingsScreen({ m, actions }: { m: SettingsModel; actions: SettingsAct
         </div>
         <div className="settings-row">
           <span className="settings-label">{L`Источник`}</span>
-          <a className="settings-link" id="srcLink" onClick={() => actions.open('https://github.com/h6rd/Dota2PornFxWeb')}>github.com/h6rd/Dota2PornFxWeb</a>
+          <a className="settings-link" id="srcLink" onClick={() => actions.open('https://github.com/ugphoneb7b-netizen/DotaModManagerNew')}>github.com/ugphoneb7b-netizen/DotaModManagerNew</a>
         </div>
         <div className="settings-row spaced">
           <span className="settings-label">{L`Моды 18+`}</span>
