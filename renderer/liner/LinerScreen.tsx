@@ -303,7 +303,7 @@ export function LinerApp() {
                       title="Добавить в плейлист"
                       onClick={() => setShowAddToModal(track)}
                     >
-                      <span className="ms">playlist_add</span>
+                      <span className="ms">folder_open</span>
                     </button>
                     <div className="liner-card-duration">
                       {formatTime(track.durationMs / 1000)}
@@ -570,7 +570,7 @@ export function LinerApp() {
                     className="liner-add-pl-item"
                     onClick={() => handleAddTrackToPl(pl.id)}
                   >
-                    <span className="ms">playlist_add</span>
+                    <span className="ms">folder_open</span>
                     <span className="liner-add-pl-name">{pl.title}</span>
                     <span className="liner-add-pl-count">({pl.tracks.length} треков)</span>
                   </button>
