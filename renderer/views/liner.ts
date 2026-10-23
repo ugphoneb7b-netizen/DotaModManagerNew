@@ -8,11 +8,23 @@ let lastModel: LinerModel | null = null;
 async function load(): Promise<void> {
   const model: LinerModel = {
     key: ++key,
-    currentTrack: null,
+    currentTrack: {
+      title: 'Demo Track',
+      artist: 'Demo Artist',
+      coverUrl: '',
+      duration: 180,
+    },
     isPlaying: false,
     progress: 0,
     volume: 0.7,
-    queue: [],
+    queue: [
+      {
+        title: 'Demo Track',
+        artist: 'Demo Artist',
+        coverUrl: '',
+        duration: 180,
+      },
+    ],
     currentIndex: 0,
   };
   lastModel = model;
