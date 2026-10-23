@@ -20,6 +20,7 @@ import './shell/progress.ts';
 import './shell/updates.ts';
 import './views/settings.ts';
 import './views/grids.ts';
+import './views/liner.ts';
 import { state } from './core/store.ts';
 import { render, invalidateViews } from './core/router.ts';
 import { refreshInstalledIndex, refreshCosmeticSlots } from './core/installed.ts';
