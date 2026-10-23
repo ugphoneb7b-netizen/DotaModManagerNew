@@ -6,7 +6,6 @@ import { musicPlayer, type PlayerState } from './player.ts';
 import type { LinerTrack } from '../../src/ipc-liner.ts';
 import {
   type Playlist,
-  FEATURED_PLAYLISTS,
   getStoredPlaylists,
   createPlaylist,
   deletePlaylist,
@@ -211,7 +210,7 @@ export function LinerApp() {
             onClick={() => setActiveTab('playlists')}
           >
             <span className="ms">queue_music</span>
-            <span>Плейлисты ({userPlaylists.length + FEATURED_PLAYLISTS.length})</span>
+            <span>Плейлисты ({userPlaylists.length})</span>
           </button>
           <button
             className="liner-nav-pill"
@@ -388,32 +387,7 @@ export function LinerApp() {
                 </div>
               )}
 
-              <div className="liner-section-title-row" style={{ marginTop: 24 }}>
-                <h2>Рекомендуемые и чужие плейлисты</h2>
-              </div>
 
-              <div className="liner-playlist-grid">
-                {FEATURED_PLAYLISTS.map((pl) => (
-                  <div
-                    key={pl.id}
-                    className="liner-playlist-card featured"
-                    onClick={() => setSelectedPlaylist(pl)}
-                  >
-                    <div className="liner-pl-cover-box">
-                      {pl.coverUrl ? (
-                        <img src={pl.coverUrl} alt="" className="liner-pl-img" />
-                      ) : (
-                        <span className="ms">album</span>
-                      )}
-                    </div>
-                    <div className="liner-pl-info">
-                      <div className="liner-pl-title">{pl.title}</div>
-                      <div className="liner-pl-sub">{pl.tracks.length} треков · {pl.author}</div>
-                      {pl.description && <div className="liner-pl-desc">{pl.description}</div>}
-                    </div>
-                  </div>
-                ))}
-              </div>
             </>
           ) : (
             /* Selected Playlist Detail View */
@@ -428,7 +402,7 @@ export function LinerApp() {
                 </button>
                 <div className="liner-pl-detail-info">
                   <h1>{selectedPlaylist.title}</h1>
-                  <p>{selectedPlaylist.description || 'Плейлист сообщества'} · {selectedPlaylist.tracks.length} треков · Автор: {selectedPlaylist.author}</p>
+                  <p>{selectedPlaylist.description ? `${selectedPlaylist.description} · ` : ""}{selectedPlaylist.tracks.length} треков</p>
                 </div>
                 {selectedPlaylist.tracks.length > 0 && (
                   <button
@@ -473,7 +447,7 @@ export function LinerApp() {
                           <div className="liner-card-artist" title={track.artist}>{track.artist}</div>
                         </div>
                         <div className="liner-card-actions" onClick={(e) => e.stopPropagation()}>
-                          {selectedPlaylist.isCustom && (
+                          {true && (
                             <button
                               className="liner-card-action-btn delete"
                               title="Удалить из плейлиста"
