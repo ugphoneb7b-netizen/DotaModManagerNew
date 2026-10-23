@@ -165,18 +165,25 @@ class MusicPlayer {
     }
 
     try {
-      const res = await window.api.liner.resolveStream(track.id);
-      if (!res.ok || !res.streamUrl) {
-        throw new Error(res.error || 'Не удалось получить поток');
+      let streamUrl = track.id.startsWith('local:') ? track.id.replace(/^local:/, '') : '';
+      let isHls = false;
+
+      if (!streamUrl) {
+        const res = await window.api.liner.resolveStream(track.id);
+        if (!res.ok || !res.streamUrl) {
+          throw new Error(res.error || 'Не удалось получить поток');
+        }
+        streamUrl = res.streamUrl;
+        isHls = !!res.isHls;
       }
 
-      if (res.isHls && Hls.isSupported()) {
+      if (isHls && Hls.isSupported()) {
         const hls = new Hls({
           enableWorker: true,
           lowLatencyMode: false,
         });
         this.hls = hls;
-        hls.loadSource(res.streamUrl);
+        hls.loadSource(streamUrl);
         hls.attachMedia(this.audio);
 
         hls.on(Hls.Events.MANIFEST_PARSED, () => {
@@ -206,7 +213,7 @@ class MusicPlayer {
           }
         });
       } else {
-        this.audio.src = res.streamUrl;
+        this.audio.src = streamUrl;
         await this.audio.play();
       }
 
