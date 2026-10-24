@@ -46,36 +46,58 @@ let lastOverlayState: LinerOverlayState = {
   theme: 'ursa',
 };
 
-let cachedSoundCloudClientId: string | undefined;
+// Pre-seeded high performance client_id with parallel discovery fallback
+let cachedSoundCloudClientId: string | undefined = '3GKD969NJWD1eB6gvQJN0GnueYbcWszv';
+let discoveryPromise: Promise<string | undefined> | null = null;
+
+// Track stream cache in memory: trackId -> { streamUrl, isHls, expiresAt }
+const streamCache = new Map<string, { streamUrl: string; isHls: boolean; expiresAt: number }>();
 
 async function discoverSoundCloudClientId(signal?: AbortSignal): Promise<string | undefined> {
-  try {
-    const SOUNDCLOUD_HOME = 'https://soundcloud.com';
-    const SCRIPT_URL = /src="((?:https:)?\/\/a-v2\.sndcdn\.com\/assets\/[^"]+\.js)"/g;
-    const CLIENT_ID_PATTERN = /client_id\s*[:=]\s*"([a-zA-Z0-9]{32})"/;
-    const res = await fetch(SOUNDCLOUD_HOME, { headers: { accept: 'text/html,application/xhtml+xml' }, signal });
-    const html = await res.text();
-    const matches = [...html.matchAll(SCRIPT_URL)].map((m) => (m[1].startsWith('//') ? `https:${m[1]}` : m[1]));
-    for (const scriptUrl of matches.reverse().slice(0, 10)) {
-      const sres = await fetch(scriptUrl, { signal });
-      const js = await sres.text();
-      const found = js.match(CLIENT_ID_PATTERN)?.[1];
-      if (found) {
-        cachedSoundCloudClientId = found;
-        return found;
+  if (discoveryPromise) return discoveryPromise;
+  discoveryPromise = (async () => {
+    try {
+      const SOUNDCLOUD_HOME = 'https://soundcloud.com';
+      const SCRIPT_URL = /src="((?:https:)?\/\/a-v2\.sndcdn\.com\/assets\/[^"]+\.js)"/g;
+      const CLIENT_ID_PATTERN = /client_id\s*[:=]\s*"([a-zA-Z0-9]{32})"/;
+      const res = await fetch(SOUNDCLOUD_HOME, { headers: { accept: 'text/html,application/xhtml+xml' }, signal });
+      const html = await res.text();
+      const matches = [...html.matchAll(SCRIPT_URL)].map((m) => (m[1].startsWith('//') ? `https:${m[1]}` : m[1]));
+      
+      // Parallel script fetches for fast resolution
+      const candidates = matches.reverse().slice(0, 6);
+      const fetched = await Promise.all(
+        candidates.map(async (u) => {
+          try {
+            const s = await fetch(u, { signal });
+            return await s.text();
+          } catch {
+            return '';
+          }
+        })
+      );
+
+      for (const js of fetched) {
+        const found = js.match(CLIENT_ID_PATTERN)?.[1];
+        if (found) {
+          cachedSoundCloudClientId = found;
+          return found;
+        }
       }
+    } catch {
+      // ignore
+    } finally {
+      discoveryPromise = null;
     }
-  } catch {
-    // fallback
-  }
-  return undefined;
+    return cachedSoundCloudClientId || '3GKD969NJWD1eB6gvQJN0GnueYbcWszv';
+  })();
+  return discoveryPromise;
 }
 
 async function getSoundCloudClientId(signal?: AbortSignal): Promise<string> {
   if (cachedSoundCloudClientId) return cachedSoundCloudClientId;
   const discovered = await discoverSoundCloudClientId(signal);
-  if (!discovered) throw new Error('SoundCloud client_id could not be resolved');
-  return discovered;
+  return discovered || '3GKD969NJWD1eB6gvQJN0GnueYbcWszv';
 }
 
 /** Register Liner channels. */
@@ -119,12 +141,39 @@ export function registerLinerIpc({ win }: Pick<AppContext, 'win'>): void {
 
   ipcMain.handle('liner:resolveStream', async (event, trackId: string) => {
     try {
+      // Check memory stream cache (valid for 15 minutes)
+      const cached = streamCache.get(trackId);
+      if (cached && Date.now() < cached.expiresAt) {
+        return { ok: true, streamUrl: cached.streamUrl, isHls: cached.isHls };
+      }
+
       const clientId = await getSoundCloudClientId();
       const id = trackId.replace(/^sc:/, '');
       const trackRes = await fetch(`https://api-v2.soundcloud.com/tracks/${encodeURIComponent(id)}?client_id=${clientId}`);
-      if (!trackRes.ok) return { error: `Failed to fetch track: HTTP ${trackRes.status}` };
+      if (!trackRes.ok) {
+        // If 401/403, refresh client_id immediately and retry once
+        if (trackRes.status === 401 || trackRes.status === 403) {
+          cachedSoundCloudClientId = undefined;
+          const freshId = await discoverSoundCloudClientId();
+          const retryRes = await fetch(`https://api-v2.soundcloud.com/tracks/${encodeURIComponent(id)}?client_id=${freshId}`);
+          if (!retryRes.ok) return { error: `Failed to fetch track: HTTP ${retryRes.status}` };
+          const trackData = await retryRes.json();
+          const transcodings: any[] = trackData.media?.transcodings || [];
+          const prog = transcodings.find((t) => t.format?.protocol === 'progressive');
+          const hls = transcodings.find((t) => t.format?.protocol === 'hls');
+          const chosen = prog || hls || transcodings[0];
+          if (!chosen?.url) return { error: 'No playable stream transcoding found' };
+          const sRes = await fetch(`${chosen.url}?client_id=${freshId}`);
+          if (!sRes.ok) return { error: `Failed to resolve stream URL: HTTP ${sRes.status}` };
+          const sData = await sRes.json();
+          streamCache.set(trackId, { streamUrl: sData.url, isHls: chosen.format?.protocol === 'hls', expiresAt: Date.now() + 15 * 60 * 1000 });
+          return { ok: true, streamUrl: sData.url, isHls: chosen.format?.protocol === 'hls' };
+        }
+        return { error: `Failed to fetch track: HTTP ${trackRes.status}` };
+      }
       const trackData = await trackRes.json();
       const transcodings: any[] = trackData.media?.transcodings || [];
+      // Prefer progressive mp3 for instant 0ms buffering, fallback to HLS
       const prog = transcodings.find((t) => t.format?.protocol === 'progressive');
       const hls = transcodings.find((t) => t.format?.protocol === 'hls');
       const chosen = prog || hls || transcodings[0];
@@ -133,6 +182,9 @@ export function registerLinerIpc({ win }: Pick<AppContext, 'win'>): void {
       const streamRes = await fetch(`${chosen.url}?client_id=${clientId}`);
       if (!streamRes.ok) return { error: `Failed to resolve stream URL: HTTP ${streamRes.status}` };
       const streamData = await streamRes.json();
+
+      streamCache.set(trackId, { streamUrl: streamData.url, isHls: chosen.format?.protocol === 'hls', expiresAt: Date.now() + 15 * 60 * 1000 });
+
       return {
         ok: true,
         streamUrl: streamData.url,

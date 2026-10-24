@@ -180,7 +180,11 @@ class MusicPlayer {
       if (isHls && Hls.isSupported()) {
         const hls = new Hls({
           enableWorker: true,
-          lowLatencyMode: false,
+          lowLatencyMode: true,
+          backBufferLength: 60,
+          maxBufferLength: 30,
+          maxMaxBufferLength: 60,
+          maxBufferSize: 60 * 1000 * 1000,
         });
         this.hls = hls;
         hls.loadSource(streamUrl);
