@@ -247,3 +247,118 @@ export function toolchainDialog(): Promise<boolean> {
     part(overlay, '[data-c="yes"]').focus();
   });
 }
+
+
+export interface AuthDialogResult {
+  username?: string;
+  password?: string;
+  mode?: 'login' | 'register';
+}
+
+export function authDialog(): Promise<AuthDialogResult | null> {
+  return new Promise((resolve) => {
+    const overlay = document.createElement('div');
+    overlay.className = 'confirm-overlay';
+    let currentMode: 'login' | 'register' = 'login';
+
+    overlay.innerHTML = `
+      <div class="confirm-box" role="dialog" aria-modal="true" style="max-width: 380px; width: 100%;">
+        <div class="confirm-title" style="display: flex; align-items: center; gap: 8px;">
+          <span class="ms" style="color: var(--primary);">account_circle</span>
+          <span id="authDlgTitle">${L`Вход в аккаунт`}</span>
+        </div>
+        <p class="confirm-text" id="authDlgSub" style="font-size: 13px; color: var(--text-muted); margin-bottom: 14px;">
+          ${L`Авторизуйтесь, чтобы синхронизировать сборки, сетки и пресеты.`}
+        </p>
+
+        <div style="display: flex; gap: 8px; margin-bottom: 16px;">
+          <button id="authTabLogin" class="btn btn-primary" style="flex: 1; padding: 6px 12px; font-size: 13px;">${L`Вход`}</button>
+          <button id="authTabRegister" class="btn" style="flex: 1; padding: 6px 12px; font-size: 13px;">${L`Регистрация`}</button>
+        </div>
+
+        <div style="display: flex; flex-direction: column; gap: 12px;">
+          <div>
+            <label style="display: block; font-size: 12px; font-weight: 600; margin-bottom: 4px; color: var(--text);">${L`Логин`}</label>
+            <input type="text" id="authUsername" class="search-input" placeholder="${L`Введите логин`}" style="width: 100%; box-sizing: border-box; padding: 8px 12px; border-radius: 6px; background: var(--surface-solid); border: 1px solid var(--border); color: var(--text);" autocomplete="username" />
+          </div>
+          <div>
+            <label style="display: block; font-size: 12px; font-weight: 600; margin-bottom: 4px; color: var(--text);">${L`Пароль`}</label>
+            <input type="password" id="authPassword" class="search-input" placeholder="${L`Введите пароль`}" style="width: 100%; box-sizing: border-box; padding: 8px 12px; border-radius: 6px; background: var(--surface-solid); border: 1px solid var(--border); color: var(--text);" autocomplete="current-password" />
+          </div>
+          <div id="authErrorMsg" style="display: none; color: var(--md-error); font-size: 12px; line-height: 1.4;"></div>
+        </div>
+
+        <div class="confirm-actions" style="margin-top: 20px;">
+          <button class="btn" data-c="cancel">${L`Отмена`}</button>
+          <button class="btn btn-primary" id="authSubmitBtn">${L`Войти`}</button>
+        </div>
+      </div>`;
+
+    document.body.appendChild(overlay);
+
+    const userInput = overlay.querySelector<HTMLInputElement>('#authUsername')!;
+    const passInput = overlay.querySelector<HTMLInputElement>('#authPassword')!;
+    const tabLogin = overlay.querySelector<HTMLButtonElement>('#authTabLogin')!;
+    const tabRegister = overlay.querySelector<HTMLButtonElement>('#authTabRegister')!;
+    const submitBtn = overlay.querySelector<HTMLButtonElement>('#authSubmitBtn')!;
+    const errorDiv = overlay.querySelector<HTMLElement>('#authErrorMsg')!;
+    const titleEl = overlay.querySelector<HTMLElement>('#authDlgTitle')!;
+    const subEl = overlay.querySelector<HTMLElement>('#authDlgSub')!;
+
+    const setMode = (m: 'login' | 'register') => {
+      currentMode = m;
+      errorDiv.style.display = 'none';
+      if (m === 'login') {
+        tabLogin.className = 'btn btn-primary';
+        tabRegister.className = 'btn';
+        submitBtn.textContent = L`Войти`;
+        titleEl.textContent = L`Вход в аккаунт`;
+        subEl.textContent = L`Авторизуйтесь, чтобы синхронизировать сборки, сетки и пресеты.`;
+      } else {
+        tabLogin.className = 'btn';
+        tabRegister.className = 'btn btn-primary';
+        submitBtn.textContent = L`Зарегистрироваться`;
+        titleEl.textContent = L`Новый аккаунт`;
+        subEl.textContent = L`Создайте аккаунт для обмена сборками и сетками.`;
+      }
+    };
+
+    tabLogin.addEventListener('click', () => setMode('login'));
+    tabRegister.addEventListener('click', () => setMode('register'));
+
+    const done = (res: AuthDialogResult | null) => {
+      overlay.remove();
+      document.removeEventListener('keydown', onKey);
+      resolve(res);
+    };
+
+    overlay.addEventListener('click', (e) => { if (e.target === overlay) done(null); });
+    overlay.querySelector('[data-c="cancel"]')?.addEventListener('click', () => done(null));
+
+    const submit = () => {
+      const u = userInput.value.trim();
+      const p = passInput.value;
+      if (!u || u.length < 3) {
+        errorDiv.textContent = L`Логин должен содержать от 3 символов`;
+        errorDiv.style.display = 'block';
+        userInput.focus();
+        return;
+      }
+      if (!p || p.length < 4) {
+        errorDiv.textContent = L`Пароль должен содержать от 4 символов`;
+        errorDiv.style.display = 'block';
+        passInput.focus();
+        return;
+      }
+      done({ username: u, password: p, mode: currentMode });
+    };
+
+    submitBtn.addEventListener('click', submit);
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') done(null);
+      else if (e.key === 'Enter') submit();
+    };
+    document.addEventListener('keydown', onKey);
+    userInput.focus();
+  });
+}

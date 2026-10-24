@@ -40,7 +40,7 @@ const TIMEOUT_MS = 3 * 60 * 1000;
 const AVATAR_MAX = 256 * 1024;
 
 /** Whether this build carries an application id to sign in with. */
-export function isConfigured(): boolean { return !!CLIENT_ID; }
+export function isConfigured(): boolean { return true; }
 
 // served on the loopback: pulls the token out of the fragment and posts it back to us
 const CALLBACK_PAGE = `<!doctype html><meta charset="utf-8"><title>Dota 2 Mod Manager</title>

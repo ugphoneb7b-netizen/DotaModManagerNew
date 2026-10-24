@@ -137,7 +137,7 @@ contextBridge.exposeInMainWorld('api', {
     onLink: (cb) => ipcRenderer.on('preset-link', (e, res) => cb(res)),
   },
   account: {
-    signIn: () => ipcRenderer.invoke('account:signIn'),
+    signIn: (payload) => ipcRenderer.invoke('account:signIn', payload),
     signOut: () => ipcRenderer.invoke('account:signOut'),
   },
   // the beta channel: shown only to an account the signed list names (src/beta.ts)

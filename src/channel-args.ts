@@ -120,7 +120,7 @@ export const CHANNEL_ARGS: Record<string, Check[]> = {
   'settings:get': [], 'settings:set': settingsSet, 'settings:testProxy': [downloadProxy], 'settings:detectDota': [], 'settings:browseDota': [],
   'settings:moveLangFiles': [optional(str(64))],
   'presence:view': [str(64)],
-  'account:signIn': [], 'account:signOut': [],
+  'account:signIn': [optional(shape({ username: optional(str(100)), password: optional(str(200)), mode: optional(oneOf('login', 'register')) }))], 'account:signOut': [],
   'catalog:load': [optional(bool)], 'catalog:terrainAges': [],
   // mods (src/ipc-mods.ts, src/ipc-library.ts, src/ipc-foreign.ts)
   // a stuck font or cursor is reinstalled from its record, whose category the handler judges

@@ -114,7 +114,7 @@ export interface AppApi {
   settings: SettingsApi;
   ui: UiApi;
   game: { launch: () => Promise<Reply> };
-  account: { signIn: () => Promise<Reply<{ account: NonNullable<StoredSettings['account']> }>>; signOut: () => Promise<Reply> };
+  account: { signIn: (payload?: { username?: string; password?: string; mode?: 'login' | 'register' }) => Promise<Reply<{ account: NonNullable<StoredSettings['account']> }>>; signOut: () => Promise<Reply> };
   /** the beta channel: shown only to an account the signed list names (src/beta.ts) */
   beta: { state: () => Promise<{ eligible: boolean; on: boolean }>; set: (on: boolean) => Promise<{ eligible: boolean; on: boolean }> };
   presence: { view: (name: string) => Promise<void> };

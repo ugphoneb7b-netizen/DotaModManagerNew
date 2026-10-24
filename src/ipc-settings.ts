@@ -73,14 +73,27 @@ export function registerSettingsIpc({
     refreshPresence();
   });
 
-  // ----- account (Discord) -----
-  ipcMain.handle('account:signIn', async () => {
+  // ----- account (Login / Register via Cloud Server) -----
+  ipcMain.handle('account:signIn', async (e, payload?: { username?: string; password?: string; mode?: 'login' | 'register' }) => {
     try {
-      const account = await discordAuth.signIn();
-      settings.set('account', account);
-      const w = win();
-      if (!w.isDestroyed()) { w.show(); w.focus(); }
-      return { ok: true, account };
+      if (payload && payload.username && payload.password) {
+        const url = payload.mode === 'register'
+          ? 'http://f1.rustix.me:35293/api/auth/register'
+          : 'http://f1.rustix.me:35293/api/auth/login';
+        const res = await fetch(url, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username: payload.username.trim(), password: payload.password }),
+        });
+        const data: any = await res.json();
+        if (!res.ok || !data.ok) {
+          return { error: data.detail || data.error || (payload.mode === 'register' ? 'Ошибка регистрации' : 'Неверный логин или пароль') };
+        }
+        const account = { id: data.user.id, username: data.user.username, token: data.token, isAdmin: data.user.isAdmin };
+        settings.set('account', account);
+        return { ok: true, account };
+      }
+      return { error: 'Укажите логин и пароль' };
     } catch (err) {
       return { error: errorText(err) };
     }
@@ -88,7 +101,6 @@ export function registerSettingsIpc({
 
   ipcMain.handle('account:signOut', () => {
     settings.set('account', null);
-    // no account, nobody to check against the list: back to the channel everybody else reads
     updater()?.recheck();
     return { ok: true };
   });
