@@ -115,7 +115,7 @@ export function registerLinerIpc({ win }: Pick<AppContext, 'win'>): void {
         const trendingUrl = `https://api-v2.soundcloud.com/charts?kind=trending&genre=soundcloud%3Agenres%3Aall-music&limit=25&offset=${off}&client_id=${clientId}`;
         const res = await fetch(trendingUrl);
         if (res.ok) {
-          const data = await res.json();
+          const data = (await res.json()) as any;
           const items = (data.collection || []).map((entry: any) => entry.track || entry).filter(Boolean);
           return { ok: true, tracks: formatSoundCloudTracks(items), totalResults: data.total_results || 250, offset: off };
         }
@@ -129,10 +129,10 @@ export function registerLinerIpc({ win }: Pick<AppContext, 'win'>): void {
         const freshId = await getSoundCloudClientId();
         const retryRes = await fetch(`https://api-v2.soundcloud.com/search/tracks?q=${encodeURIComponent(q)}&limit=25&offset=${off}&client_id=${freshId}`);
         if (!retryRes.ok) return { error: `SoundCloud search returned ${retryRes.status}` };
-        const data = await retryRes.json();
+        const data = (await retryRes.json()) as any;
         return { ok: true, tracks: formatSoundCloudTracks(data.collection || []), totalResults: data.total_results || 0, offset: off };
       }
-      const data = await res.json();
+      const data = (await res.json()) as any;
       return { ok: true, tracks: formatSoundCloudTracks(data.collection || []), totalResults: data.total_results || 0, offset: off };
     } catch (err: any) {
       return { error: err?.message || 'Search failed' };
@@ -157,7 +157,7 @@ export function registerLinerIpc({ win }: Pick<AppContext, 'win'>): void {
           const freshId = await discoverSoundCloudClientId();
           const retryRes = await fetch(`https://api-v2.soundcloud.com/tracks/${encodeURIComponent(id)}?client_id=${freshId}`);
           if (!retryRes.ok) return { error: `Failed to fetch track: HTTP ${retryRes.status}` };
-          const trackData = await retryRes.json();
+          const trackData = (await retryRes.json()) as any;
           const transcodings: any[] = trackData.media?.transcodings || [];
           const prog = transcodings.find((t) => t.format?.protocol === 'progressive');
           const hls = transcodings.find((t) => t.format?.protocol === 'hls');
@@ -165,13 +165,13 @@ export function registerLinerIpc({ win }: Pick<AppContext, 'win'>): void {
           if (!chosen?.url) return { error: 'No playable stream transcoding found' };
           const sRes = await fetch(`${chosen.url}?client_id=${freshId}`);
           if (!sRes.ok) return { error: `Failed to resolve stream URL: HTTP ${sRes.status}` };
-          const sData = await sRes.json();
+          const sData = (await sRes.json()) as any;
           streamCache.set(trackId, { streamUrl: sData.url, isHls: chosen.format?.protocol === 'hls', expiresAt: Date.now() + 15 * 60 * 1000 });
           return { ok: true, streamUrl: sData.url, isHls: chosen.format?.protocol === 'hls' };
         }
         return { error: `Failed to fetch track: HTTP ${trackRes.status}` };
       }
-      const trackData = await trackRes.json();
+      const trackData = (await trackRes.json()) as any;
       const transcodings: any[] = trackData.media?.transcodings || [];
       // Prefer progressive mp3 for instant 0ms buffering, fallback to HLS
       const prog = transcodings.find((t) => t.format?.protocol === 'progressive');
@@ -181,7 +181,7 @@ export function registerLinerIpc({ win }: Pick<AppContext, 'win'>): void {
 
       const streamRes = await fetch(`${chosen.url}?client_id=${clientId}`);
       if (!streamRes.ok) return { error: `Failed to resolve stream URL: HTTP ${streamRes.status}` };
-      const streamData = await streamRes.json();
+      const streamData = (await streamRes.json()) as any;
 
       streamCache.set(trackId, { streamUrl: streamData.url, isHls: chosen.format?.protocol === 'hls', expiresAt: Date.now() + 15 * 60 * 1000 });
 

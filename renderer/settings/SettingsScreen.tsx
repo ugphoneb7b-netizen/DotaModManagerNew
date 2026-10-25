@@ -6,7 +6,6 @@ import { createRoot } from 'react-dom/client';
 import { flushSync } from 'react-dom';
 import { MotionConfig } from 'motion/react';
 import { pane } from '../core/router.ts';
-import { Reveal } from '../motion/Reveal.tsx';
 import { Swap } from '../motion/Swap.tsx';
 import { ProxyControl } from './ProxyControl.ts';
 

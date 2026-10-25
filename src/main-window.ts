@@ -107,7 +107,7 @@ export function createMainWindow({ appRoot, settings, diag, workArea = null, qui
       nodeIntegration: false,
       // the default since Electron 20, said out loud so test/window-guard.test.ts can hold it
       sandbox: true,
-      backgroundThrottling: false,
+      backgroundThrottling: true,
     },
   });
   // out/renderer, or the Vite server under `npm run dev` (src/app-page.ts)

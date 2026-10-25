@@ -26,6 +26,8 @@ class MusicPlayer {
   private state: PlayerState;
   private listeners: Set<Listener> = new Set();
   private isSeeking = false;
+  private lastTimeUpdate = 0;
+  private lastOverlaySync = 0;
 
   constructor() {
     this.audio = new Audio();
@@ -47,13 +49,22 @@ class MusicPlayer {
 
     this.audio.addEventListener('timeupdate', () => {
       if (this.isSeeking) return;
+      const now = performance.now();
+      // Throttle state update to at most once per 250ms to save CPU & avoid thrashing React tree
+      if (now - this.lastTimeUpdate < 250) return;
+      this.lastTimeUpdate = now;
+
       const cur = this.audio.currentTime || 0;
       const dur = this.audio.duration || this.state.duration || 1;
       this.state.currentTime = cur;
       this.state.duration = Number.isFinite(dur) && dur > 0 ? dur : this.state.duration;
       this.state.progress = dur > 0 ? Math.min(1, Math.max(0, cur / dur)) : 0;
       this.notify();
-      this.syncOverlay();
+
+      if (now - this.lastOverlaySync >= 500) {
+        this.lastOverlaySync = now;
+        this.syncOverlay();
+      }
     });
 
     this.audio.addEventListener('play', () => {
@@ -180,11 +191,11 @@ class MusicPlayer {
       if (isHls && Hls.isSupported()) {
         const hls = new Hls({
           enableWorker: true,
-          lowLatencyMode: true,
-          backBufferLength: 60,
-          maxBufferLength: 30,
-          maxMaxBufferLength: 60,
-          maxBufferSize: 60 * 1000 * 1000,
+          lowLatencyMode: false,
+          backBufferLength: 15,
+          maxBufferLength: 10,
+          maxMaxBufferLength: 20,
+          maxBufferSize: 10 * 1000 * 1000,
         });
         this.hls = hls;
         hls.loadSource(streamUrl);
