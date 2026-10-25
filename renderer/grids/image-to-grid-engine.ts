@@ -221,9 +221,9 @@ export function rasterizeImage(
     }
   }
 
-  // Thinning: bound total points to prevent Dota 2 UI stuttering while preserving contours and shading
-  const maxPoints = options.maxPoints ?? 500;
-  if (points.length > maxPoints && width > 10 && height > 10) {
+  // Thinning: bound total points only if maxPoints is explicitly set; otherwise keep full fine detail
+  if (options.maxPoints && points.length > options.maxPoints && width > 10 && height > 10) {
+    const maxPoints = options.maxPoints;
     const contourPoints = points.filter((p) => p.isContour);
     const halftonePoints = points.filter((p) => !p.isContour);
 
