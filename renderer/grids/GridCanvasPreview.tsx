@@ -5,14 +5,29 @@
 import { useEffect, useRef, useState } from 'react';
 import { drawGridToCanvas, type GridConfigItem } from './gridCanvas.ts';
 
-export function GridCanvasPreview({ grid, width = 716 }: { grid: GridConfigItem | null; width?: number }) {
+export function GridCanvasPreview({ grid, width = 360 }: { grid: GridConfigItem | null; width?: number }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [, setTick] = useState(0);
+  const redrawTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     if (canvasRef.current) {
-      drawGridToCanvas(canvasRef.current, grid, width, () => setTick((t) => t + 1));
+      drawGridToCanvas(canvasRef.current, grid, width, () => {
+        // Debounce redraws when portraits finish loading to prevent redundant canvas operations
+        if (!redrawTimerRef.current) {
+          redrawTimerRef.current = setTimeout(() => {
+            redrawTimerRef.current = null;
+            setTick((t) => t + 1);
+          }, 120);
+        }
+      });
     }
+    return () => {
+      if (redrawTimerRef.current) {
+        clearTimeout(redrawTimerRef.current);
+        redrawTimerRef.current = null;
+      }
+    };
   }, [grid, width]);
 
   return <canvas ref={canvasRef} />;

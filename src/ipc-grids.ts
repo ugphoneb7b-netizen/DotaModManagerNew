@@ -124,6 +124,16 @@ export function registerGridsIpc({
   });
 
   const gridDataMemoryCache = new Map<string, unknown>();
+  const MAX_GRID_DATA_CACHE = 40;
+
+  function pruneGridDataCache() {
+    if (gridDataMemoryCache.size > MAX_GRID_DATA_CACHE) {
+      const keys = Array.from(gridDataMemoryCache.keys());
+      for (let i = 0; i < 15; i++) {
+        if (keys[i]) gridDataMemoryCache.delete(keys[i]);
+      }
+    }
+  }
 
   ipcMain.handle('grids:gridData', async (_e, id: string, revision?: number) => {
     if (typeof id !== 'string' || !id.trim()) return null;
@@ -141,7 +151,7 @@ export function registerGridsIpc({
       });
       if (!res.ok) return null;
       const json = await res.json();
-      gridDataMemoryCache.set(cacheKey, json);
+      pruneGridDataCache(); gridDataMemoryCache.set(cacheKey, json);
       return json;
     } catch {
       return null;

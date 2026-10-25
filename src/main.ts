@@ -52,7 +52,8 @@ const { app, ipcMain, shell, net, session } = electron();
 app.commandLine.appendSwitch('disable-gpu-memory-buffer-video-frames');
 app.commandLine.appendSwitch('disable-breakpad');
 app.commandLine.appendSwitch('disable-features', 'CalculateNativeWinOcclusion');
-app.commandLine.appendSwitch('js-flags', '--max-old-space-size=256');
+app.commandLine.appendSwitch('renderer-process-limit', '2');
+app.commandLine.appendSwitch('js-flags', '--max-old-space-size=256 --optimize_for_size');
 
 // a sandbox run (--write-jail=<folder>) writes nowhere else, from its first write on (src/write-jail.ts)
 jailThisRun(process.argv, process.env);

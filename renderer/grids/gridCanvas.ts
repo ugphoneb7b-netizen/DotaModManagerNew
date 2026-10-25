@@ -162,6 +162,7 @@ function calcCharAdvance(char: string, prevChar: string): number {
 function getLineAdvances(line: string): number[] {
   let advs = advancesCache.get(line);
   if (advs) return advs;
+  if (advancesCache.size > 2000) advancesCache.clear();
   let prev = '';
   const chars = Array.from(line);
   advs = chars.map((ch) => {

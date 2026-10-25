@@ -55,6 +55,15 @@ const SORT_OPTIONS = [
 ];
 
 const gridDataCache = new Map<string, GridConfigItem>();
+const MAX_RENDERER_GRID_CACHE = 30;
+function pruneRendererGridCache() {
+  if (gridDataCache.size > MAX_RENDERER_GRID_CACHE) {
+    const keys = Array.from(gridDataCache.keys());
+    for (let i = 0; i < 10; i++) {
+      if (keys[i]) gridDataCache.delete(keys[i]);
+    }
+  }
+}
 
 function useGridData(item: WorkshopGrid | LocalGrid): GridConfigItem | null {
   const [data, setData] = useState<GridConfigItem | null>(() => {
@@ -85,7 +94,7 @@ function useGridData(item: WorkshopGrid | LocalGrid): GridConfigItem | null {
         if (!active || !res) return;
         const configItem = res as GridConfigItem;
         if (configItem && configItem.configs) {
-          gridDataCache.set(item.id, configItem);
+          pruneRendererGridCache(); gridDataCache.set(item.id, configItem);
           setData(configItem);
         }
       })
@@ -126,7 +135,7 @@ function GridCardMedia({
       ) : null}
 
       {gridData ? (
-        <GridCanvasPreview grid={gridData} width={716} />
+        <GridCanvasPreview grid={gridData} width={360} />
       ) : (
         <div className="grid-card-media-placeholder">
           <span className="ms">grid_view</span>
