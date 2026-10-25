@@ -3,7 +3,6 @@
 
 import type { GridConfigItem } from './gridCanvas.ts';
 import { rasterizeImage, type RasterOptions } from './image-to-grid-engine.ts';
-import { packPointsWithDotaStandards } from './grid-packer.ts';
 
 export type GridMethod = 'halftone' | 'contour' | 'hybrid';
 
@@ -19,10 +18,9 @@ export interface ImageToGridOptions {
   fill?: number;        // 20..100 (% of canvas)
   spacingX?: number;    // px
   spacingY?: number;    // px
-  maxPoints?: number;   // safe point limit (default: 480, protects Dota 2 from FPS drop)
 }
 
-/* Presets tuned for maximum clarity and detail reproduction without lagging Dota 2 */
+/* Presets tuned for maximum clarity and detail reproduction */
 export const GRID_PRESETS: Record<string, {
   method: GridMethod;
   label: string;
@@ -33,43 +31,43 @@ export const GRID_PRESETS: Record<string, {
     method: 'hybrid',
     label: 'Фото / реализм',
     description: 'Высокая чёткость черт лица и предметов с мягкой тоновой штриховкой',
-    options: { fill: 94, detail: 80, edgeBoost: 55, gamma: 50, spacingX: 6.8, spacingY: 10.8, brightness: 0, contrast: 25, maxPoints: 480 },
+    options: { fill: 94, detail: 80, edgeBoost: 55, gamma: 50, spacingX: 3.6, spacingY: 6.2, brightness: 0, contrast: 25 },
   },
   portrait: {
     method: 'hybrid',
     label: 'Портрет / лицо',
     description: 'Максимальная отчётливость глаз, ресниц, губ и волос',
-    options: { fill: 94, detail: 85, edgeBoost: 65, gamma: 48, spacingX: 6.8, spacingY: 10.8, brightness: 0, contrast: 30, maxPoints: 500 },
+    options: { fill: 94, detail: 85, edgeBoost: 65, gamma: 48, spacingX: 3.6, spacingY: 6.2, brightness: 0, contrast: 30 },
   },
   anime: {
     method: 'contour',
     label: 'Аниме / чистые линии',
     description: 'Идеальные векторные контуры без мыла с направленными штрихами (| / \\ -)',
-    options: { fill: 94, detail: 90, edgeBoost: 80, gamma: 50, spacingX: 7.2, spacingY: 11.2, brightness: 0, contrast: 40, maxPoints: 460 },
+    options: { fill: 94, detail: 90, edgeBoost: 80, gamma: 50, spacingX: 3.8, spacingY: 6.5, brightness: 0, contrast: 40 },
   },
   textLogo: {
     method: 'contour',
     label: 'Текст и логотип',
     description: 'Предельная чёткость шрифтов и мелких надписей без размытия',
-    options: { fill: 92, detail: 95, edgeBoost: 90, gamma: 50, spacingX: 6.2, spacingY: 10.2, brightness: 0, contrast: 50, maxPoints: 450 },
+    options: { fill: 92, detail: 95, edgeBoost: 90, gamma: 50, spacingX: 3.5, spacingY: 6.0, brightness: 0, contrast: 50 },
   },
   sketch: {
     method: 'contour',
     label: 'Скетч / карандаш',
     description: 'Глубокий контурный рисунок пером и штриховкой',
-    options: { fill: 92, detail: 85, edgeBoost: 80, gamma: 52, spacingX: 7.2, spacingY: 11.2, brightness: 5, contrast: 35, maxPoints: 480 },
+    options: { fill: 92, detail: 85, edgeBoost: 80, gamma: 52, spacingX: 3.8, spacingY: 6.5, brightness: 5, contrast: 35 },
   },
   dense: {
     method: 'hybrid',
     label: 'Максимум деталей',
-    description: 'Повышенная детализация при сохранении плавной работы в Dota 2',
-    options: { fill: 96, detail: 95, edgeBoost: 75, gamma: 46, spacingX: 5.6, spacingY: 9.2, brightness: 0, contrast: 30, maxPoints: 550 },
+    description: 'Предельная детализация и глубина для самых сложных артов',
+    options: { fill: 96, detail: 98, edgeBoost: 75, gamma: 46, spacingX: 3.2, spacingY: 5.5, brightness: 0, contrast: 30 },
   },
   pixel: {
     method: 'halftone',
     label: 'Пиксель-арт / точки',
     description: 'Классическая точечная матрица без направленных линий',
-    options: { fill: 90, detail: 55, edgeBoost: 15, gamma: 50, spacingX: 8.8, spacingY: 14.5, brightness: 0, contrast: 30, maxPoints: 400 },
+    options: { fill: 90, detail: 55, edgeBoost: 15, gamma: 50, spacingX: 6.8, spacingY: 11.5, brightness: 0, contrast: 30 },
   },
 };
 
@@ -183,8 +181,6 @@ export function convertImageToGrid(image: HTMLImageElement, options: ImageToGrid
       break;
   }
 
-  const maxPoints = Math.max(100, Math.min(1200, options.maxPoints ?? 480));
-
   const rasterOpts: RasterOptions = {
     detail,
     spacingX,
@@ -193,20 +189,18 @@ export function convertImageToGrid(image: HTMLImageElement, options: ImageToGrid
     edgeBoost,
     gamma,
     method,
-    maxPoints,
   };
 
   const points = rasterizeImage(luma, width, height, rasterOpts);
 
-  // Pack points into standard Dota 2 category lines with precise spacing
-  // This reduces categories in Dota 2 from 2000+ down to ~40-90, preventing lag completely.
-  const rawPoints = points.map((p) => ({
-    ch: p.ch,
-    x: +(offsetX + p.x).toFixed(4),
-    y: +(offsetY + p.y).toFixed(4),
+  const categories: GridConfigItem['configs'][0]['categories'] = points.map((p) => ({
+    category_name: p.ch,
+    x_position: +(offsetX + p.x).toFixed(4),
+    y_position: +(offsetY + p.y).toFixed(4),
+    width: 30,
+    height: 30,
+    hero_ids: [] as number[],
   }));
-
-  const categories = packPointsWithDotaStandards(rawPoints);
 
   return {
     version: 3,
