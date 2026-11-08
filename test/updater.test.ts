@@ -41,7 +41,7 @@ test('a copy on the stable channel is never offered a prerelease', () => {
 
   assert.equal(f.api.channel, 'latest');
   assert.equal(f.api.allowPrerelease, false, 'a beta on GitHub is a prerelease; the stable channel must not see it');
-  assert.deepEqual(f.feeds, [{ provider: 'github', owner: 'dota2modmanager', repo: 'dota2-mod-manager' }]);
+  assert.deepEqual(f.feeds, [{ provider: 'github', owner: 'ugphoneb7b-netizen', repo: 'DotaModManagerNew' }]);
   assert.equal(f.checks(), 1);
 });
 
@@ -82,7 +82,7 @@ test('looking again starts at GitHub, and re-reads which channel this copy is on
 
   channel = 'beta'; // the switch was flipped, or the signed list changed
   assert.equal(u.recheck(), 'beta');
-  assert.deepEqual(f.feeds[2], { provider: 'github', owner: 'dota2modmanager', repo: 'dota2-mod-manager' });
+  assert.deepEqual(f.feeds[2], { provider: 'github', owner: 'ugphoneb7b-netizen', repo: 'DotaModManagerNew' });
   assert.equal(f.api.channel, 'beta');
   assert.equal(f.checks(), 3);
 });

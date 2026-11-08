@@ -1376,7 +1376,7 @@ _No description in the source._
 ### `isConfigured`
 
 ```ts
-export function isConfigured(): boolean { return !!CLIENT_ID; }
+export function isConfigured(): boolean { return true; }
 ```
 
 Whether this build carries an application id to sign in with.

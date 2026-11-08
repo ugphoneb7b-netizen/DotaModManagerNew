@@ -1,9 +1,11 @@
 /* The Liner Screen: Real music search, player controls, queue, custom & community playlists, local file imports. */
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { createRoot } from 'react-dom/client';
 import { pane } from '../core/router.ts';
 import { musicPlayer, type PlayerState } from './player.ts';
-import type { LinerTrack } from '../../src/ipc-liner.ts';
+import { SoundpadPanel } from './SoundpadPanel.tsx';
+import { TrackCard } from './TrackCard.tsx';
+import type { LinerTrack } from '../api/liner.ts';
 import {
   type Playlist,
   getStoredPlaylists,
@@ -33,7 +35,7 @@ function formatTime(seconds: number): string {
 
 export function LinerApp() {
   const [playerState, setPlayerState] = useState<PlayerState>(() => musicPlayer.getState());
-  const [activeTab, setActiveTab] = useState<'tracks' | 'playlists' | 'my_tracks'>('tracks');
+  const [activeTab, setActiveTab] = useState<'tracks' | 'playlists' | 'soundpad'>('tracks');
   const [query, setQuery] = useState('');
   const [page, setPage] = useState(1);
   const [searchResults, setSearchResults] = useState<LinerTrack[]>([]);
@@ -183,6 +185,26 @@ export function LinerApp() {
   const isLoading = playerState.status === 'loading';
   const hasMore = searchResults.length === PAGE_SIZE || page * PAGE_SIZE < totalResults;
 
+  // Stable callbacks keep TrackCard's memo from breaking on every player tick
+  const handlePlaySearch = useCallback(
+    (t: LinerTrack) => musicPlayer.playTrack(t, searchResults),
+    [searchResults],
+  );
+  const handlePlayPlaylist = useCallback(
+    (t: LinerTrack) => { if (selectedPlaylist) musicPlayer.playTrack(t, selectedPlaylist.tracks); },
+    [selectedPlaylist],
+  );
+  const handleCardAddToPl = useCallback((t: LinerTrack) => setShowAddToModal(t), []);
+  const handleCardRemove = useCallback(
+    (t: LinerTrack) => {
+      if (!selectedPlaylist) return;
+      removeTrackFromPlaylist(selectedPlaylist.id, t.id);
+      refreshUserPlaylists();
+    },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [selectedPlaylist],
+  );
+
   return (
     <div className="liner-screen">
       {/* Hidden local audio file input */}
@@ -211,6 +233,13 @@ export function LinerApp() {
           >
             <span className="ms">queue_music</span>
             <span>Плейлисты ({userPlaylists.length})</span>
+          </button>
+          <button
+            className={`liner-nav-pill ${activeTab === 'soundpad' ? 'active' : ''}`}
+            onClick={() => setActiveTab('soundpad')}
+          >
+            <span className="ms">graphic_eq</span>
+            <span>{L`Пэд`}</span>
           </button>
           <button
             className="liner-nav-pill"
@@ -272,45 +301,16 @@ export function LinerApp() {
           )}
 
           <div className="liner-track-grid">
-            {searchResults.map((track) => {
-              const isThisPlaying = currentTrack?.id === track.id && isPlaying;
-              const isThisCurrent = currentTrack?.id === track.id;
-
-              return (
-                <div
-                  key={track.id}
-                  className={`liner-track-card ${isThisCurrent ? 'current' : ''}`}
-                  onClick={() => musicPlayer.playTrack(track, searchResults)}
-                >
-                  <div className="liner-card-cover-wrap">
-                    {track.coverUrl ? (
-                      <img src={track.coverUrl} alt="" className="liner-card-cover" />
-                    ) : (
-                      <div className="liner-card-no-cover">♫</div>
-                    )}
-                    <div className="liner-card-overlay">
-                      <span className="ms">{isThisPlaying ? 'pause' : 'play_arrow'}</span>
-                    </div>
-                  </div>
-                  <div className="liner-card-info">
-                    <div className="liner-card-title" title={track.title}>{track.title}</div>
-                    <div className="liner-card-artist" title={track.artist}>{track.artist}</div>
-                  </div>
-                  <div className="liner-card-actions" onClick={(e) => e.stopPropagation()}>
-                    <button
-                      className="liner-card-action-btn"
-                      title="Добавить в плейлист"
-                      onClick={() => setShowAddToModal(track)}
-                    >
-                      <span className="ms">folder_open</span>
-                    </button>
-                    <div className="liner-card-duration">
-                      {formatTime(track.durationMs / 1000)}
-                    </div>
-                  </div>
-                </div>
-              );
-            })}
+            {searchResults.map((track) => (
+              <TrackCard
+                key={track.id}
+                track={track}
+                isCurrent={currentTrack?.id === track.id}
+                isPlaying={currentTrack?.id === track.id && isPlaying}
+                onPlay={handlePlaySearch}
+                onAddToPlaylist={handleCardAddToPl}
+              />
+            ))}
           </div>
 
           {/* Pagination */}
@@ -422,56 +422,25 @@ export function LinerApp() {
                 </div>
               ) : (
                 <div className="liner-track-grid">
-                  {selectedPlaylist.tracks.map((track) => {
-                    const isThisPlaying = currentTrack?.id === track.id && isPlaying;
-                    const isThisCurrent = currentTrack?.id === track.id;
-
-                    return (
-                      <div
-                        key={track.id}
-                        className={`liner-track-card ${isThisCurrent ? 'current' : ''}`}
-                        onClick={() => musicPlayer.playTrack(track, selectedPlaylist.tracks)}
-                      >
-                        <div className="liner-card-cover-wrap">
-                          {track.coverUrl ? (
-                            <img src={track.coverUrl} alt="" className="liner-card-cover" />
-                          ) : (
-                            <div className="liner-card-no-cover">♫</div>
-                          )}
-                          <div className="liner-card-overlay">
-                            <span className="ms">{isThisPlaying ? 'pause' : 'play_arrow'}</span>
-                          </div>
-                        </div>
-                        <div className="liner-card-info">
-                          <div className="liner-card-title" title={track.title}>{track.title}</div>
-                          <div className="liner-card-artist" title={track.artist}>{track.artist}</div>
-                        </div>
-                        <div className="liner-card-actions" onClick={(e) => e.stopPropagation()}>
-                          {true && (
-                            <button
-                              className="liner-card-action-btn delete"
-                              title="Удалить из плейлиста"
-                              onClick={() => {
-                                removeTrackFromPlaylist(selectedPlaylist.id, track.id);
-                                refreshUserPlaylists();
-                              }}
-                            >
-                              <span className="ms">close</span>
-                            </button>
-                          )}
-                          <div className="liner-card-duration">
-                            {formatTime(track.durationMs / 1000)}
-                          </div>
-                        </div>
-                      </div>
-                    );
-                  })}
+                  {selectedPlaylist.tracks.map((track) => (
+                    <TrackCard
+                      key={track.id}
+                      track={track}
+                      isCurrent={currentTrack?.id === track.id}
+                      isPlaying={currentTrack?.id === track.id && isPlaying}
+                      onPlay={handlePlayPlaylist}
+                      onRemove={handleCardRemove}
+                    />
+                  ))}
                 </div>
               )}
             </div>
           )}
         </div>
       )}
+
+      {/* SOUNDPAD TAB */}
+      {activeTab === 'soundpad' && <SoundpadPanel />}
 
       {/* Modal: Create Playlist */}
       {showCreateModal && (
@@ -588,7 +557,7 @@ export function LinerApp() {
           {/* Left: Artwork and title */}
           <div className="liner-docked-info">
             {currentTrack?.coverUrl ? (
-              <img src={currentTrack.coverUrl} alt="" className="liner-docked-cover" />
+              <img src={currentTrack.coverUrl} alt="" className="liner-docked-cover" loading="lazy" decoding="async" />
             ) : (
               <div className="liner-docked-no-cover">♫</div>
             )}

@@ -2,6 +2,24 @@
 
 What changed in each release. The app updates itself, so you get all of this without reinstalling.
 
+## 1.0.6
+
+### Liner grows a sound pad
+
+The Liner tab has a new Pad section next to tracks and playlists. Import your own sounds - mp3,
+wav, ogg, flac and the rest - and they land on a grid where one click fires them. Sounds overlap:
+each pad button runs on its own player, so you can layer clips instead of replacing whatever is
+playing. A click pauses a running sound, a stop button rewinds it, and Stop all silences the pad
+in one press. Everything lives in the app's own folder, works offline, and shows up again after
+restarts. There is a folder button that opens the sounds directory in Explorer if you would
+rather drop files in by hand.
+
+### The track list stopped repainting four times a second
+
+Every track card used to redraw on each player tick - sixteen times a second while music played.
+Cards are memoized now, covers lazy-load, and only the one card whose state actually changed does
+any work.
+
 ## 1.0.4-beta.1
 
 ### Merging grids does what it says now

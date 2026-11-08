@@ -888,6 +888,38 @@ const EN = {
   'Дубликатов по имени: {0}': 'Duplicate names dropped: {0}',
   'Скачать объединённую сетку как отдельный .json файл': 'Download merged grid as a standalone .json file',
   'Сетка сохранена в файл': 'Grid saved to file',
+
+  // ---------- account sign-in dialog ----------
+  'Добро пожаловать, {0}!': 'Welcome, {0}!',
+  'Вход по логину и паролю': 'Sign in with username and password',
+  'Вход в аккаунт': 'Sign in',
+  'Авторизуйтесь, чтобы синхронизировать сборки, сетки и пресеты.': 'Sign in to sync your builds, grids and presets.',
+  'Зарегистрироваться': 'Sign up',
+  'Новый аккаунт': 'New account',
+  'Создайте аккаунт для обмена сборками и сетками.': 'Create an account to share builds and grids.',
+  'Логин должен содержать от 3 символов': 'Username must be at least 3 characters',
+  'Пароль должен содержать от 4 символов': 'Password must be at least 4 characters',
+  'Вход': 'Sign in',
+  'Регистрация': 'Sign up',
+  'Логин': 'Username',
+  'Введите логин': 'Enter username',
+  'Пароль': 'Password',
+  'Введите пароль': 'Enter password',
+
+  // ---------- liner soundpad ----------
+  'Пэд': 'Pad',
+  'Звуковой пэд': 'Sound pad',
+  'звуков': 'sounds',
+  'играет': 'playing',
+  'Импорт…': 'Importing…',
+  'Импорт звуков': 'Import sounds',
+  'Остановить всё': 'Stop all',
+  'Стоп всё': 'Stop all',
+  'Стоп': 'Stop',
+  'Открыть папку со звуками': 'Open the sounds folder',
+  'Удалить «{0}» с пэда?': 'Remove «{0}» from the pad?',
+  'Звуков пока нет — импортируй mp3, wav, ogg и другие, и запускай их одним кликом':
+    'No sounds yet — import mp3, wav, ogg and more, then fire them with one click',
 };
 
 const translation = (key) => window.I18N_LANG === 'zh-CN' ? (window.ZH_CN?.[key] ?? EN[key]) : EN[key];

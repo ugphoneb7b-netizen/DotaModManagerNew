@@ -35,6 +35,7 @@ const EN = {
   'Выбери .vpk файлы модов или .zip с ними': 'Pick mod .vpk files, or a .zip holding them',
   'Моды (.vpk, .zip)': 'Mods (.vpk, .zip)',
   'Выбери папку с модами': 'Pick a folder with mods',
+  'Выбери звуковые файлы для пэда': 'Pick sound files for the pad',
   // the two counted passes of an import, shown on the progress bar
   'Копирование модов': 'Copying mods',
   'Разбор модов': 'Reading mods',

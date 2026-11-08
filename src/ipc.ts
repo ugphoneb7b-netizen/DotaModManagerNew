@@ -14,6 +14,7 @@ import { registerGameIpc } from './ipc-game.ts';
 import { registerGridsIpc } from './ipc-grids.ts';
 import { registerDiagnosticsIpc } from './ipc-diagnostics.ts';
 import { registerLinerIpc } from './ipc-liner.ts';
+import { registerSoundpadIpc } from './ipc-soundpad.ts';
 
 /** Register every channel the window can call. */
 export function registerIpc(ctx: AppContext): void {
@@ -29,4 +30,5 @@ export function registerIpc(ctx: AppContext): void {
   registerMiscIpc(ctx);
   registerDiagnosticsIpc(ctx);
   registerLinerIpc(ctx);
+  registerSoundpadIpc(ctx);
 }

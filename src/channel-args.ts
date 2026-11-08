@@ -209,6 +209,11 @@ export const CHANNEL_ARGS: Record<string, Check[]> = {
   })],
   'liner:overlayGetState': [],
   'liner:overlayAction': [str(100, 1), optional(str(1000))],
+  // Liner Soundpad (src/ipc-soundpad.ts): sounds already on disk, nothing crosses the wire
+  'soundpad:list': [],
+  'soundpad:import': [],
+  'soundpad:delete': [optional(str(255, 1))],
+  'soundpad:reveal': [],
   // the removal window (src/uninstall-window.ts)
   // the window sends all three boxes (renderer/uninstall.js); the uninstaller acts on data itself
   'uninstall:plan': [], 'uninstall:run': [optional(shape({ revert: optional(bool), mods: optional(bool), data: optional(bool) }))],

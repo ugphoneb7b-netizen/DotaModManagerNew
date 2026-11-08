@@ -27,6 +27,7 @@ import * as presets from '../src/ipc-presets.ts';
 import * as settings from '../src/ipc-settings.ts';
 import * as windowIpc from '../src/ipc-window.ts';
 import * as liner from '../src/ipc-liner.ts';
+import * as soundpad from '../src/ipc-soundpad.ts';
 import { registerAgainst } from './helpers/fake-electron.ts';
 
 const ROOT = path.resolve(import.meta.dirname, '..');
@@ -34,7 +35,7 @@ const ROOT = path.resolve(import.meta.dirname, '..');
 const MODULES: Record<string, Record<string, unknown>> = {
   'ipc-diagnostics.ts': diagnostics, 'ipc-foreign.ts': foreign, 'ipc-game.ts': game, 'ipc-grids.ts': grids, 'ipc-library.ts': library,
   'ipc-liner.ts': liner, 'ipc-misc.ts': misc, 'ipc-mods.ts': mods, 'ipc-packs.ts': packs,
-  'ipc-presets.ts': presets, 'ipc-settings.ts': settings, 'ipc-window.ts': windowIpc,
+  'ipc-presets.ts': presets, 'ipc-settings.ts': settings, 'ipc-soundpad.ts': soundpad, 'ipc-window.ts': windowIpc,
 };
 
 const electron = {

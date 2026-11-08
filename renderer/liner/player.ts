@@ -1,6 +1,6 @@
 /* Sound playback engine using HTMLAudioElement and Hls.js for HLS streaming. */
 import Hls from 'hls.js';
-import type { LinerTrack } from '../../src/ipc-liner.ts';
+import type { LinerTrack } from '../api/liner.ts';
 
 export type PlaybackStatus = 'idle' | 'loading' | 'playing' | 'paused' | 'error';
 export type LoopMode = 'none' | 'all' | 'one';

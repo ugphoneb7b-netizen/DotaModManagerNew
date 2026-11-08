@@ -206,6 +206,7 @@ const VALID: Record<string, unknown[][]> = {
   }]],
   'liner:overlayGetState': [[]],
   'liner:overlayAction': [['togglePlay'], ['previousTrack', 'payload']],
+  'soundpad:list': [[]], 'soundpad:import': [[]], 'soundpad:delete': [['boop.mp3']], 'soundpad:reveal': [[]],
   'uninstall:plan': [[]], 'uninstall:run': [[{ revert: true, mods: false, data: false }], [{ revert: true, mods: true, data: true }], [null]], 'uninstall:done': [[true]], 'uninstall:cancel': [[]],
 };
 

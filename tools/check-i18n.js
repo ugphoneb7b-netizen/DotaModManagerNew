@@ -233,7 +233,7 @@ function duplicateKeys(file) {
  * unchanged, or English with Russian letters left in it. A missing twin was caught before; these
  * two looked translated to the checker and showed an English player Russian all the same. The
  * few strings that read the same in both languages are allowed by name. */
-const SAME_IN_BOTH = ['Dota 2', 'VPK', '18+'];
+const SAME_IN_BOTH = ['Dota 2', 'VPK', '18+', 'Liner'];
 
 /** @returns {{ unchanged: string[], cyrillic: Array<{ ru: string, en: string }> }} */
 function checkTranslations(dict) {

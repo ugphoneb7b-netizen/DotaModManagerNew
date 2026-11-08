@@ -574,6 +574,7 @@ that location is not writable.
 | `renderer/motion/*` | How things move: travel, fold, swap, reveal |
 | `renderer/styles/*`, `renderer/fonts/*` | The tokens every size and colour comes from, and the faces |
 | `renderer/uninstall.html`, `renderer/uninstall.js`, `renderer/uninstall-bridge.d.ts` | The removal window, a classic script loaded without a build, and the types of the bridge its preload gives it |
+| `renderer/overlay.html`, `preload-overlay.js` | The floating Liner player that sits over every window, on a bridge of its own |
 | `tools/sandbox.js` | The throwaway game tree |
 | `src/write-jail.ts` | A run started with `--write-jail` writes nowhere else |
 | `tools/e2e.mjs`, `test/fixtures/e2e/*` | Installing, switching and removing a mod by clicking through the real window, offline, in the sandbox |

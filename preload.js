@@ -182,5 +182,11 @@ contextBridge.exposeInMainWorld('api', {
     overlayGetState: () => ipcRenderer.invoke('liner:overlayGetState'),
     sendOverlayAction: (action, payload) => ipcRenderer.send('liner:overlayAction', action, payload),
     onOverlayAction: (cb) => ipcRenderer.on('liner:action', (e, action, payload) => cb(action, payload)),
+    soundpad: {
+      list: () => ipcRenderer.invoke('soundpad:list'),
+      import: () => ipcRenderer.invoke('soundpad:import'),
+      remove: (id) => ipcRenderer.invoke('soundpad:delete', id),
+      reveal: () => ipcRenderer.invoke('soundpad:reveal'),
+    },
   },
 });

@@ -1,5 +1,5 @@
 /* Types and storage helpers for user and community playlists. */
-import type { LinerTrack } from '../../src/ipc-liner.ts';
+import type { LinerTrack } from '../api/liner.ts';
 
 export interface Playlist {
   id: string;

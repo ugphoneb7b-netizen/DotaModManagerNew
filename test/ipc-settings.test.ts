@@ -71,18 +71,45 @@ test('finding the game by itself saves it and moves the watcher there', async ()
   assert.ok(s.log.includes('rearm'));
 });
 
-test('signing in keeps the account and brings the window back from behind the browser', async () => {
+/* account:signIn posts to the cloud backend now, so the tests answer fetch themselves */
+function stubFetch(answer: () => Promise<Response>) {
+  const real = globalThis.fetch;
+  globalThis.fetch = answer as typeof fetch;
+  return () => { globalThis.fetch = real; };
+}
+const jsonRes = (body: unknown, status = 200) =>
+  new Response(JSON.stringify(body), { status, headers: { 'Content-Type': 'application/json' } });
+
+test('signing in keeps the account the server answered with', async () => {
   const s = stand();
-  const r = await s.call('account:signIn');
-  assert.equal(r.ok, true);
-  assert.deepEqual(s.store.get('account'), { id: '1', username: 'misha' });
-  assert.deepEqual(s.log, ['show', 'focus']);
+  const restore = stubFetch(async () => jsonRes({
+    ok: true, token: 'tok', user: { id: '1', username: 'misha', isAdmin: false },
+  }));
+  try {
+    const r = await s.call('account:signIn', { username: 'misha', password: 'secret' });
+    assert.equal(r.ok, true);
+    assert.deepEqual(s.store.get('account'), { id: '1', username: 'misha', token: 'tok', isAdmin: false });
+  } finally {
+    restore();
+  }
+});
+
+test('a sign-in without credentials never leaves the window', async () => {
+  const s = stand();
+  assert.deepEqual(await s.call('account:signIn'), { error: 'Укажите логин и пароль' });
+  assert.equal(s.store.has('account'), false);
+  assert.deepEqual(s.log, []);
 });
 
 test('a sign-in that fails says why and keeps no account', async () => {
-  const s = stand({ signIn: async () => { throw new Error('the browser was closed'); } });
-  assert.deepEqual(await s.call('account:signIn'), { error: 'the browser was closed' });
-  assert.equal(s.store.has('account'), false);
+  const s = stand();
+  const restore = stubFetch(async () => jsonRes({ ok: false, detail: 'the browser was closed' }, 401));
+  try {
+    assert.deepEqual(await s.call('account:signIn', { username: 'x', password: 'y' }), { error: 'the browser was closed' });
+    assert.equal(s.store.has('account'), false);
+  } finally {
+    restore();
+  }
 });
 
 test('signing out asks the updater again, since the beta list no longer applies', async () => {
