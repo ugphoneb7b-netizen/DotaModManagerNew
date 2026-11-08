@@ -918,6 +918,7 @@ const EN = {
   'Стоп': 'Stop',
   'Открыть папку со звуками': 'Open the sounds folder',
   'Удалить «{0}» с пэда?': 'Remove «{0}» from the pad?',
+  'Выход звука': 'Sound output',
   'Звуков пока нет — импортируй mp3, wav, ogg и другие, и запускай их одним кликом':
     'No sounds yet — import mp3, wav, ogg and more, then fire them with one click',
 };

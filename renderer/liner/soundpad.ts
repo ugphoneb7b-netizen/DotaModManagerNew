@@ -8,11 +8,19 @@ import type { SoundpadSound } from '../api/liner.ts';
 
 export type PadStatus = 'playing' | 'paused';
 
+export interface OutputDevice {
+  id: string;
+  label: string;
+}
+
 export interface SoundpadState {
   sounds: SoundpadSound[];
   /** id -> what its element is doing right now. Absent means never started or finished. */
   status: Record<string, PadStatus>;
   volume: number;
+  /** '' is the system default; anything else is an audiooutput deviceId. */
+  outputDeviceId: string;
+  outputDevices: OutputDevice[];
   /** true while the import dialog or a file copy is running. */
   busy: boolean;
   loaded: boolean;
@@ -26,6 +34,8 @@ class Soundpad {
     sounds: [],
     status: {},
     volume: 0.8,
+    outputDeviceId: '',
+    outputDevices: [],
     busy: false,
     loaded: false,
   };
@@ -60,6 +70,10 @@ class Soundpad {
     el = new Audio();
     el.preload = 'auto';
     el.volume = this.state.volume;
+    // routed once at creation; setOutputDevice re-routes the live elements when it changes
+    if (this.state.outputDeviceId && el.setSinkId) {
+      el.setSinkId(this.state.outputDeviceId).catch(() => {});
+    }
     el.src = sound.fileUrl;
     el.addEventListener('ended', () => {
       // finished sounds drop out of the map so a long session does not pin every element
@@ -75,6 +89,7 @@ class Soundpad {
   }
 
   public async load(): Promise<void> {
+    this.state.outputDeviceId = localStorage.getItem('soundpad_output_device') || '';
     try {
       const res = await window.api.liner.soundpad.list();
       this.state.sounds = res.sounds || [];
@@ -83,6 +98,44 @@ class Soundpad {
     }
     this.state.loaded = true;
     this.notify();
+    void this.refreshOutputDevices();
+  }
+
+  /** What the system can play through: default plus every audiooutput device it reports. */
+  public async refreshOutputDevices(): Promise<void> {
+    try {
+      const devices = await navigator.mediaDevices.enumerateDevices();
+      const outs = devices
+        .filter((d) => d.kind === 'audiooutput')
+        .map((d, i) => ({ id: d.deviceId, label: d.label || `Output ${i + 1}` }));
+      // the default entry is implicit: '' routes through whatever Windows has selected
+      this.state.outputDevices = outs;
+      // a saved device that vanished (unplugged cable) falls back to default rather than silence
+      if (this.state.outputDeviceId && !outs.some((d) => d.id === this.state.outputDeviceId)) {
+        this.state.outputDeviceId = '';
+        localStorage.removeItem('soundpad_output_device');
+      }
+      this.notify();
+    } catch {
+      // no mediaDevices in this context: the pad just plays to the default output
+    }
+  }
+
+  /** Route every pad element - playing ones included - to another output device. */
+  public async setOutputDevice(deviceId: string): Promise<void> {
+    this.state.outputDeviceId = deviceId;
+    if (deviceId) localStorage.setItem('soundpad_output_device', deviceId);
+    else localStorage.removeItem('soundpad_output_device');
+    this.notify();
+    await Promise.all(
+      [...this.elements.values()].map(async (el) => {
+        try {
+          await el.setSinkId?.(deviceId || '');
+        } catch {
+          // a device that vanished mid-switch just keeps the old route
+        }
+      }),
+    );
   }
 
   public async importSounds(): Promise<void> {

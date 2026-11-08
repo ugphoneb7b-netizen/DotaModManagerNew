@@ -284,7 +284,7 @@ test('no check throws, whatever it is handed', () => {
   assert.match(String(checkArgs('settings:set', ['panels', loop])), /JSON/);
 });
 
-test('the browser is asked for two permissions at most, and only by the app\'s pages', () => {
+test('the browser is asked for three permissions at most, and only by the app\'s pages', () => {
   const guard = createIpcGuard({ pages: [PAGE], log: () => {} });
   let request: ((wc: unknown, p: string, cb: (ok: boolean) => void, d: unknown) => void) | null = null;
   let check: ((wc: unknown, p: string, o: string, d: unknown) => boolean) | null = null;
@@ -299,6 +299,7 @@ test('the browser is asked for two permissions at most, and only by the app\'s p
   };
   assert.equal(ask('clipboard-sanitized-write', PAGE), true);
   assert.equal(ask('fullscreen', PAGE), true);
+  assert.equal(ask('speaker-selection', PAGE), true, 'the sound pad picks its output device');
   for (const p of ['media', 'geolocation', 'notifications', 'openExternal', 'hid', 'serial', 'usb', 'clipboard-read']) {
     assert.equal(ask(p, PAGE), false, p);
   }

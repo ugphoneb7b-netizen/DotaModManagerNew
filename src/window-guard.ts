@@ -15,8 +15,9 @@
  * the channel's entry in src/channel-args.ts. Registering a channel with no entry there throws at
  * start, so a new channel cannot ship unchecked. Refusals go to the diagnostics log.
  *
- * The same guard answers the browser's permission questions (the clipboard for a share link and
- * fullscreen for the video player, nothing else, and only for the app's pages) and locks every
+ * The same guard answers the browser's permission questions (the clipboard for a share link,
+ * fullscreen for the video player, speaker selection for the sound pad's output device - and
+ * only for the app's pages) and locks every
  * web contents the app ever creates: no webview, no window.open, no navigation off the app's pages.
  */
 import path from 'node:path';
@@ -32,7 +33,9 @@ type Sender = { senderFrame?: { url: string; parent: unknown } | null };
 type Listener = (...a: unknown[]) => unknown;
 
 /** What the app's pages may ask the browser for: the share link's copy, and the player's fullscreen. */
-const PERMISSIONS = new Set(['clipboard-sanitized-write', 'fullscreen']);
+// speaker-selection is the narrow one: it lets the pad pick which output device plays, without
+// opening the microphone or camera the way 'media' would
+const PERMISSIONS = new Set(['clipboard-sanitized-write', 'fullscreen', 'speaker-selection']);
 
 /** An address reduced to the page it names: no query, no fragment, and a file path as Windows compares it. */
 export function pageKey(url: string): string | null {
@@ -101,7 +104,7 @@ export function createIpcGuard({ pages, log }: { pages: string[]; log: (msg: str
     }) as IpcMain['on'];
   };
 
-  /** Answer the browser's permission questions: two permissions, for the app's pages only. */
+  /** Answer the browser's permission questions: three permissions, for the app's pages only. */
   const permissions = (session: Pick<Session, 'setPermissionRequestHandler' | 'setPermissionCheckHandler'>): void => {
     session.setPermissionRequestHandler((wc, permission, callback, details) => {
       const ok = PERMISSIONS.has(permission) && isAppPage(details?.requestingUrl || wc?.getURL());

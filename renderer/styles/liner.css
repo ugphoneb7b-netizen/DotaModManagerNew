@@ -1127,3 +1127,23 @@ body.bottom-folded .liner-docked-player {
 .soundpad-pad-delete .ms {
   font-size: 15px;
 }
+
+.soundpad-output .ms {
+  font-size: 18px;
+}
+
+.soundpad-device-select {
+  max-width: 200px;
+  padding: 4px 8px;
+  font-size: 12px;
+  color: var(--text);
+  background: transparent;
+  border: none;
+  outline: none;
+  cursor: pointer;
+}
+
+.soundpad-device-select option {
+  background: var(--surface);
+  color: var(--text);
+}

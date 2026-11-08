@@ -120,6 +120,22 @@ export function SoundpadPanel() {
               title={L`Громкость`}
             />
           </div>
+          {state.outputDevices.length > 0 && (
+            <div className="soundpad-volume soundpad-output">
+              <span className="ms">spatial_audio_off</span>
+              <select
+                className="soundpad-device-select"
+                value={state.outputDeviceId}
+                onChange={(e) => soundpad.setOutputDevice(e.target.value)}
+                title={L`Выход звука`}
+              >
+                <option value="">{L`По умолчанию`}</option>
+                {state.outputDevices.map((d) => (
+                  <option key={d.id} value={d.id}>{d.label}</option>
+                ))}
+              </select>
+            </div>
+          )}
         </div>
       </div>
 
